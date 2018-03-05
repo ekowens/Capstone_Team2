@@ -1,3 +1,7 @@
+import java.text.DateFormat;
+import java.util.Date;
+import java.sql.*;
+
 ////////////////////////////////////////////////////////////////////////////////
 //  Course:   CSC289 Spring 2018
 //  Section:  0001
@@ -12,50 +16,44 @@ public class File {
 	private String path = "";
 	private int size = 0;
 	private String extension = "";
-	private Boolean active = false;
+	private Boolean active = true;
 	private String memo = "";
-	private FileHistory history = new FileHistory();
+	private Timestamp modDate;
+	//private FileHistory history = new FileHistory();
 	
 	public File(){}
 	
-	public File(int newID, String newName, String newPath, int newSize, String newExtension, Boolean newActive){
+	public File(int newID, String newName, String newPath, int newSize, 
+			String newExtension, Timestamp newModDate){
 		id = newID;
 		name = newName;
 		path = newPath;
 		size = newSize;
 		extension = newExtension;
-		active = newActive;
+		modDate = newModDate;
 	}
 	
-	public File(int newID, String newName, String newPath, int newSize, String newExtension, Boolean newActive, String newMemo){
+	public File(int newID, String newName, String newPath, int newSize, 
+			String newExtension, String newMemo, Timestamp newModDate){
 		id = newID;
 		name = newName;
 		path = newPath;
 		size = newSize;
 		extension = newExtension;
-		active = newActive;
 		memo = newMemo;
+		modDate = newModDate;
 	}
 	
-	public File(int newID, String newName, String newPath, int newSize, String newExtension, Boolean newActive, FileHistory newHistory){
+	
+	public File(int newID, String newName, String newPath, int newSize, 
+			String newExtension, Boolean newActive, String newMemo, Timestamp newModDate ){
 		id = newID;
 		name = newName;
 		path = newPath;
 		size = newSize;
 		extension = newExtension;
-		active = newActive;
-		history = newHistory;
-	}
-	
-	public File(int newID, String newName, String newPath, int newSize, String newExtension, Boolean newActive, String newMemo, FileHistory newHistory){
-		id = newID;
-		name = newName;
-		path = newPath;
-		size = newSize;
-		extension = newExtension;
-		active = newActive;
 		memo = newMemo;
-		history = newHistory;
+		modDate = newModDate;
 	}
 	
 	public boolean update(File file){
@@ -69,15 +67,7 @@ public class File {
 		memo = file.getMemo();
 		return true;
 	}
-	
-	public FileHistory getFileHistory(){
-		if(history.isEmpty()){
-			return null;
-		} else{
-			return history;
-		}
-	}
-	
+		
 	public int getID(){
 		return id;
 	}
@@ -102,8 +92,30 @@ public class File {
 		return active;
 	}
 	
+	public Timestamp getModDate()
+	{
+		return modDate;
+	}
+	
 	public String getMemo(){
 		return memo;
+	}
+
+	public String toString()
+	{
+		String status = "Active";
+		if (!active)
+			{
+			 status = "Inactive"; 
+			}
+		String fileString = "ID: " + id + " " + path + name + "." + extension + " Size: " + size + " " + status
+				+ " \nMod Date: " + modDate ;
+		
+		if (memo != "")
+		{
+			fileString = fileString + "\nMemo: " + memo;
+		}
+		return fileString;
 	}
 
 }
