@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<AnchorPane prefHeight="500.0" prefWidth="700.0" style="-fx-background-color: #2d3e50;" xmlns="http://javafx.com/javafx/9.0.1" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <MenuBar blendMode="ADD" layoutY="2.0" prefHeight="26.0" prefWidth="700.0">
+        <menus>
+          <Menu mnemonicParsing="false" text="File">
+            <items>
+              <MenuItem mnemonicParsing="false" text="Close" />
+            </items>
+          </Menu>
+          <Menu mnemonicParsing="false" text="Edit">
+            <items>
+              <MenuItem mnemonicParsing="false" text="Delete" />
+            </items>
+          </Menu>
+          <Menu mnemonicParsing="false" text="Help">
+            <items>
+              <MenuItem mnemonicParsing="false" text="About" />
+            </items>
+          </Menu>
+        </menus>
+      </MenuBar>
+      <VBox layoutY="34.0" prefHeight="368.0" prefWidth="131.0">
+         <children>
+            <TextField promptText="File Name" />
+            <Button blendMode="ADD" mnemonicParsing="false" text="Find" textFill="#0f1324de" wrapText="true">
+               <VBox.margin>
+                  <Insets left="80.0" top="5.0" />
+               </VBox.margin>
+            </Button>
+            <Button blendMode="ADD" mnemonicParsing="false" prefHeight="32.0" prefWidth="138.0" text="Report">
+               <VBox.margin>
+                  <Insets top="50.0" />
+               </VBox.margin>
+            </Button>
+            <Button blendMode="ADD" mnemonicParsing="false" prefHeight="32.0" prefWidth="143.0" text="Memo">
+               <VBox.margin>
+                  <Insets top="10.0" />
+               </VBox.margin>
+            </Button>
+            <Button blendMode="ADD" mnemonicParsing="false" prefHeight="32.0" prefWidth="138.0" text="Database">
+               <VBox.margin>
+                  <Insets top="10.0" />
+               </VBox.margin>
+            </Button>
+         </children>
+      </VBox>
+      <ComboBox accessibleRole="CONTEXT_MENU" blendMode="COLOR_DODGE" layoutX="173.0" layoutY="34.0" prefHeight="28.0" prefWidth="143.0" promptText="Data Modified" />
+      <ComboBox blendMode="COLOR_DODGE" layoutX="357.0" layoutY="33.0" prefHeight="30.0" prefWidth="150.0" promptText="Memos" />
+      <ComboBox blendMode="COLOR_DODGE" layoutX="542.0" layoutY="34.0" prefHeight="28.0" prefWidth="143.0" promptText="Active/Inactive" />
+      <HBox layoutX="153.0" layoutY="73.0" prefHeight="426.0" prefWidth="546.0">
+         <children>
+            <ScrollPane prefHeight="417.0" prefWidth="554.0">
+               <content>
+                  <TableView prefHeight="418.0" prefWidth="550.0">
+                    <columns>
+                      <TableColumn prefWidth="100.0" text="Name" />
+                      <TableColumn prefWidth="200.0" text="In Folder" />
+                        <TableColumn prefWidth="75.0" text="Size" />
+                        <TableColumn prefWidth="50.0" text="Type" />
+                        <TableColumn prefWidth="150.0" text="Date Modified" />
+                    </columns>
+                  </TableView>
+               </content>
+            </ScrollPane>
+         </children>
+      </HBox>
+   </children>
+</AnchorPane>
