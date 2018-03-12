@@ -5,7 +5,8 @@
 //  Project:  FileAid
 //  File:     FileRecord.java
 ////////////////////////////////////////////////////////////////////////////////
-public class FileRecord {
+import java.sql.*;
+public class FileRecord implements Comparable<FileRecord> {
 	
 	
 	private static final FileRecord String = null;
@@ -13,14 +14,16 @@ public class FileRecord {
 	private String path = "";
 	private int size = 0;
 	private String extension = "";
+	private Timestamp modDate;
 	
 	
-	public FileRecord( String Name, String newPath, int newSize, String newExtension){
+	public FileRecord( String Name, String newPath, int newSize, String newExtension, Timestamp newModDate){
 		
 		name = Name;
 		path = newPath;
 		size = newSize;
 		extension = newExtension;
+		modDate = newModDate;
 		
 	}
 
@@ -32,6 +35,7 @@ public class FileRecord {
 		path = file.getPath();
 		size = file.getSize();
 		extension = file.getExtension();
+		modDate = file.getModDate();
 		return true;
 	}
 	public FileRecord getRecord(){
@@ -71,6 +75,21 @@ public class FileRecord {
 		return extension;
 	}
 	
+	public Timestamp getModDate(){
+		return modDate;
+	}
 	
+	public int compareTo(FileRecord fileRecord)
+	{
+		if (this.modDate.compareTo(fileRecord.modDate) >= 0)
+		{
+			return 1;
+		}
+		else
+		{
+			return -1;
+		}
+	}
+
 	}
 		
