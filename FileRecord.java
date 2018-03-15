@@ -10,6 +10,8 @@ public class FileRecord implements Comparable<FileRecord> {
 	
 	
 	private static final FileRecord String = null;
+	private int id = 0;
+	private int faFileID = 0;
 	private String name = "";
 	private String path = "";
 	private int size = 0;
@@ -17,8 +19,10 @@ public class FileRecord implements Comparable<FileRecord> {
 	private Timestamp modDate;
 	
 	
-	public FileRecord( String Name, String newPath, int newSize, String newExtension, Timestamp newModDate){
+	public FileRecord(int newID, int newfaFileID, String Name, String newPath, int newSize, String newExtension, Timestamp newModDate){
 		
+		id = newID;
+		faFileID = newfaFileID;
 		name = Name;
 		path = newPath;
 		size = newSize;
@@ -55,10 +59,17 @@ public class FileRecord implements Comparable<FileRecord> {
 	
 	
 	public String toString(){
-	    return name +"=="+path+"=="+size+"=="+ extension  ;
+	    return name +"=="+path+"=="+size+"=="+ extension + "==" + modDate;
 	}
 	
-	
+	public int getID(){
+		return id;
+	}
+		
+	public int getFAFileID(){
+		return faFileID;
+	}
+		
 	public String getName(){
 		return name;
 	}
