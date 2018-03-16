@@ -5,7 +5,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.GregorianCalendar;
+import java.util.List;
 
 ////////////////////////////////////////////////////////////////////////////////
 //  Course:   CSC 289 Spring 2018
@@ -384,6 +386,26 @@ public class DBConnection
 				sqlExcept.printStackTrace();
 			}
 		}// end selectRecords
+		
+		// Find a specific FAFile object given its ID
+		public FAFile findFAFile(int ID)
+		{
+			FAFile faFile = null;
+			return faFile;
+		}
+		
+		// Return all FAFiles in an ArrayList
+		public ArrayList<FAFile> getAllFAFiles()
+		{
+			ArrayList<FAFile> allFAFiles = new ArrayList<FAFile>();
+			return allFAFiles;
+		}
+		
+		// Update an existing FAFile
+		public void upDateFAFile(FAFile faFile)
+		{
+			
+		}
 		
 		public void insertFile (FAFile file)
 		{
