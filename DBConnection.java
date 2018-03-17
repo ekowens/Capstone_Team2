@@ -1,4 +1,5 @@
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -7,7 +8,7 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.GregorianCalendar;
-import java.util.List;
+import java.util.Scanner;
 
 ////////////////////////////////////////////////////////////////////////////////
 //  Course:   CSC 289 Spring 2018
@@ -36,7 +37,7 @@ public class DBConnection
 	// define the Derby connection URL to use
 	private String connectionURL = "jdbc:derby:C:/FileAid/" + dbName + ";create=true";
 	private Connection conn = null;
-	private Statement statement = null;
+	//private Statement statement = null;
 	
 	public DBConnection()
 	{
@@ -59,19 +60,14 @@ public class DBConnection
 			conn = DriverManager.getConnection(connectionURL);
 			System.out.println("Connected to database " + dbName);
 
-			statement = conn.createStatement();
-			// PreparedStatement psInsert;
-			String createString1 = "CREATE TABLE FAFILE  "
-					+ "(fiID INT NOT NULL CONSTRAINT FAFILE_PK PRIMARY KEY, "
-					+ " fiPATH VARCHAR(210), fiNAME VARCHAR(260), fiSIZE INT NOT NULL, "
-					+ " fiEXTENSION VARCHAR(5) NOT NULL, fiACTIVE SMALLINT, "
-					+ " fiMOD_DATE TIMESTAMP NOT NULL, fiMEMO VARCHAR(120)  ) ";
-			
-			String createString2 = "CREATE TABLE FILERECORD "
-					+ "(frID INT NOT NULL CONSTRAINT FILERECORD_PK PRIMARY KEY, "
-					+ " frfiID INT NOT NULL, frPATH VARCHAR(210), frNAME VARCHAR(260), "
-					+ " frSIZE INT NOT NULL, frEXTENSION VARCHAR(5) NOT NULL, "
-					+ " frMOD_DATE TIMESTAMP NOT NULL ) ";
+			Statement statement = conn.createStatement();
+			// Create Database
+			// Read DDL into a String from an external text file
+			File sourceFile = new File("DBCreate.txt");
+			String ddl = readAFile(sourceFile);
+			// Split the single string into an array of strings, 
+			// each consisting of a single DDL statement
+			String[] createStrings = ddl.split("\\;");
 
 			// Create a statement to issue simple commands.
 			// Call utility method to check if FAFile table exists.
@@ -79,8 +75,10 @@ public class DBConnection
 			if (!FileAidPilotUtils.wwdChk4Table(conn))
 			{
 				System.out.println(" . . . . creating FileAid Database");
-				statement.execute(createString1);
-				statement.execute(createString2);
+				for (String createString : createStrings)
+					{
+					statement.execute(createString);
+					}
 			}
 
 			// Create File data for test
@@ -231,6 +229,7 @@ public class DBConnection
 
 	}
 	
+	// Deletes all records from database
 	public void clearDB()
 	{
 
@@ -261,6 +260,28 @@ public class DBConnection
 			e.printStackTrace(System.out);
 		}
 	} // end clearDB
+	
+	// Given a FAFile ID, deletes that record, returns 1 if successful, 0 if record not found
+	public int deleteFAFile(int ID)
+	{
+		int result = 0;
+		if (this.findFAFile(ID) != null)
+		{
+			result = 1;
+			try
+			{
+				Statement statement = conn.createStatement();
+				statement.executeUpdate("DELETE FROM FAFILE WHERE fiID=" + ID);
+				statement.close();
+			}
+			catch (SQLException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} // end if
+		return result;
+	}
 
 	public static int getActiveStatus(boolean active)
 	{
@@ -350,11 +371,12 @@ public class DBConnection
 			}
 		}// end createConnection
 
-		public void selectRecords()
+		public ArrayList<FAFile> selectAllRecords()
 		{
+			ArrayList<FAFile> allFAFileRecords = new ArrayList<>();
 			try
 			{
-				statement = conn.createStatement();
+				Statement statement = conn.createStatement();
 				ResultSet results = statement.executeQuery("select * from FAFILE");
 				int numRows = DBConnection.getNumTableRows(conn, "FAFILE");
 
@@ -371,11 +393,11 @@ public class DBConnection
 
 					while (results.next())
 					{
-						FAFile printFile = new FAFile(results.getInt(1),
+						FAFile newFAFile = new FAFile(results.getInt(1),
 								results.getString(3), results.getString(2),
 								results.getInt(4), results.getString(5),
 								results.getString(8), results.getTimestamp(7));
-						System.out.println("\n" + printFile.toString());
+						allFAFileRecords.add(newFAFile);
 					} // end while
 					results.close();
 					statement.close();
@@ -385,33 +407,61 @@ public class DBConnection
 			{
 				sqlExcept.printStackTrace();
 			}
+			return allFAFileRecords;
 		}// end selectRecords
 		
-		// Find a specific FAFile object given its ID
+		// Find a specific FAFile object given its ID, returns null if ID does not exist
 		public FAFile findFAFile(int ID)
 		{
 			FAFile faFile = null;
+            try
+			{
+    			Statement statement = conn.createStatement();
+				ResultSet results = statement.executeQuery
+						("select * from FAFILE where fiID = " + ID);
+				while (results.next())
+				{
+					faFile = new FAFile(results.getInt(1),
+							results.getString(3), results.getString(2),
+							results.getInt(4), results.getString(5),
+							results.getString(8), results.getTimestamp(7));
+				} // end while
+				results.close();
+				statement.close();
+
+			}
+			catch (SQLException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
 			return faFile;
 		}
 		
-		// Return all FAFiles in an ArrayList
-		public ArrayList<FAFile> getAllFAFiles()
-		{
-			ArrayList<FAFile> allFAFiles = new ArrayList<FAFile>();
-			return allFAFiles;
-		}
-		
 		// Update an existing FAFile
+		// Takes updated FAFile object and substitutes it for the existing FAFile record
 		public void upDateFAFile(FAFile faFile)
 		{
-			
+			int ID = faFile.getID();
+			try
+			{
+				Statement statement = conn.createStatement();
+				statement.executeUpdate("DELETE FROM FAFILE WHERE fiID=" + ID);
+			}
+			catch (SQLException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			this.insertFile(faFile);			
 		}
 		
 		public void insertFile (FAFile file)
 		{
 			try
 			{
-				statement = conn.createStatement();
+				Statement statement = conn.createStatement();
 
 				String update = String.format(
 						"INSERT INTO FAFILE (fiID, fiPATH, fiNAME, fiSIZE, fiEXTENSION, fiACTIVE, fiMOD_DATE, fiMEMO) "
@@ -433,10 +483,6 @@ public class DBConnection
 		{
 			try
 			{
-				if (statement != null)
-				{
-					statement.close();
-				}
 				if (conn != null)
 				{
 					DriverManager.getConnection(connectionURL + ";shutdown=true");
@@ -450,7 +496,18 @@ public class DBConnection
 			System.out.println("\n\nFileAid DB shut down succcessfully");
 
 		} // end shutdown
-	
+
+		public static String readAFile(File fileName) throws FileNotFoundException {
+
+			Scanner scan = new Scanner(fileName);
+
+			String charBuffer = scan.nextLine();
+			while (scan.hasNextLine()) {
+				charBuffer = charBuffer + scan.nextLine();
+			}
+			scan.close();
+			return charBuffer;
+		} // end readAFile
 
 } // end class
 

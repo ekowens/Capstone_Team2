@@ -102,6 +102,11 @@ public class FAFile implements Comparable<FAFile> {
 		return memo;
 	}
 	
+	public void setMemo(String newMemo)
+	{
+		memo = newMemo;
+	}
+	
 	public int compareTo(FAFile faFile)
 	{
 		if (this.modDate.compareTo(faFile.modDate) >= 0)

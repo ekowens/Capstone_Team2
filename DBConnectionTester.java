@@ -1,4 +1,7 @@
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.GregorianCalendar;
 import java.util.Scanner;
 
@@ -41,14 +44,23 @@ public class DBConnectionTester
 		while (!exit)
 		{
 			System.out.print("\nChoose from the following options: "
-					+ "\n1 \tShow Records" + "\n2 \tAdd a Record"
-					+ "\n3 \tDelete Records"
-					+ "\n4 \tExit" + "\nChoice: ");
+					+ "\n1 \tShow Records" 
+					+ "\n2 \tAdd a Record"
+					+ "\n3 \tDelete All Records"
+					+ "\n4 \tDelete a Record"
+					+ "\n5 \tReturn Record with ID = 1"
+					+ "\n6 \tModify a Record" 
+					+ "\n7 \tExit" 
+					+ "\nChoice: ");
 			int response = scan.nextInt();
 			switch (response)
 			{
 			case 1:
-				dbConnection.selectRecords();
+				ArrayList<FAFile> allFAFiles = dbConnection.selectAllRecords();
+				for ( FAFile faFile : allFAFiles)
+				{
+					System.out.println("\n" + faFile.toString());
+				}
 				break;
 			case 2:
 				FAFile newFile = createFile();
@@ -58,6 +70,38 @@ public class DBConnectionTester
 				dbConnection.clearDB();
 				break;
 			case 4:
+				System.out.print("Enter a record ID to delete: ");
+				int delRecordID = scan.nextInt();
+				int result = dbConnection.deleteFAFile(delRecordID);
+				if (result == 1)
+				{
+					System.out.println("\nDeletion Successful");
+				}
+				else System.out.println("\nRecord does not exist");
+				break;
+			case 5:
+				FAFile faFile = dbConnection.findFAFile(1);
+				if (faFile == null)
+				{
+					System.out.println("\nThere is no record with ID = 1");
+				}
+				else
+				{
+					System.out.println("\n" + faFile.toString());
+				}
+				break;
+			case 6:
+				FAFile updatedFAFile = dbConnection.findFAFile(2);
+				updatedFAFile = upDateFile(updatedFAFile);
+				dbConnection.upDateFAFile(updatedFAFile);
+				ArrayList<FAFile> allFAFiles2 = dbConnection.selectAllRecords();
+				for ( FAFile faFile2 : allFAFiles2)
+				{
+					System.out.println("\n" + faFile2.toString());
+				}				
+				break;
+				
+			case 7:
 				exit = true;
 				break;
 			default:
@@ -77,6 +121,14 @@ public class DBConnectionTester
 				sqlDate1);
 		return test1;
 	} // end createFile
+	
+	private static FAFile upDateFile(FAFile faFile)
+	{
+		faFile.setMemo("This is the file that was modified");
+		return faFile;
+	}
+	
+
 
 	
 }
