@@ -52,7 +52,8 @@ public class DBConnectionTester
 					+ "\n6 \tModify a Record" 
 					+ "\n7 \tInsert Test Data  (Don't do this twice without clearing the DB)"
 					+ "\n8 \tReturn FileRecords for a particular FAFile"
-					+ "\n9 \tExit" 
+					+ "\n9 \tAdd a FileRecord to FAFile ID = 3" 
+					+ "\n10 \tExit" 
 					+ "\nChoice: ");
 			int response = scan.nextInt();
 			switch (response)
@@ -73,7 +74,15 @@ public class DBConnectionTester
 				break;
 			case 2:
 				FAFile newFile = createFile();
-				dbConnection.insertFile(newFile);
+				boolean success = dbConnection.insertFile(newFile);
+				if (success)
+				{
+					System.out.println("\nNew FAFile successfully added.");
+				}
+				else
+				{
+					System.out.println("\nNew FAFile was already in the database.");
+				}
 				break;
 			case 3:
 				dbConnection.clearDB();
@@ -81,8 +90,8 @@ public class DBConnectionTester
 			case 4:
 				System.out.print("Enter a record ID to delete: ");
 				int delRecordID = scan.nextInt();
-				int result = dbConnection.deleteFAFile(delRecordID);
-				if (result == 1)
+				success = dbConnection.deleteFAFile(delRecordID);
+				if (success)
 				{
 					System.out.println("\nDeletion Successful");
 				}
@@ -100,14 +109,22 @@ public class DBConnectionTester
 				}
 				break;
 			case 6:
-				FAFile updatedFAFile = dbConnection.findFAFile(2);
-				updatedFAFile = upDateFile(updatedFAFile);
-				dbConnection.upDateFAFile(updatedFAFile);
-				ArrayList<FAFile> allFAFiles2 = dbConnection.selectAllRecords();
-				for ( FAFile faFile2 : allFAFiles2)
+				FAFile oldFAFile = dbConnection.findFAFile(2);
+				FAFile modifiedFAFile = modifyFile(oldFAFile);
+				success = dbConnection.upDateFAFile(modifiedFAFile);
+				if (success)
 				{
-					System.out.println("\n" + faFile2.toString());
-				}				
+					ArrayList<FAFile> allFAFiles2 = dbConnection
+							.selectAllRecords();
+					for (FAFile faFile2 : allFAFiles2)
+					{
+						System.out.println("\n" + faFile2.toString());
+					}
+				} // end if
+				else
+				{
+					System.out.println("FAFile not found");
+				}
 				break;
 				
 			case 7:
@@ -132,6 +149,19 @@ public class DBConnectionTester
 				break;
 
 			case 9:
+				FileRecord newFileRecord = createFileRecord();
+				success = dbConnection.insertFileRecord(newFileRecord);
+				if (success)
+				{
+					System.out.println("\nNew FileRecord successfully added.");
+				}
+				else
+				{
+					System.out.println("\nAssociated FAFile was not in the database.");
+				}
+				break;
+				
+			case 10:
 				exit = true;
 				break;
 			default:
@@ -147,17 +177,25 @@ public class DBConnectionTester
 	{
 		GregorianCalendar date1 = new GregorianCalendar(2018, 01, 19);
 		Timestamp sqlDate1 = new Timestamp(date1.getTimeInMillis());
-		FAFile test1 = new FAFile(4, "test4", "c:\\testfiles\\", 3, "docx",
+		FAFile test1 = new FAFile(3, "test3", "c:\\testfiles\\", 3, "docx",
 				sqlDate1);
 		return test1;
 	} // end createFile
 	
-	private static FAFile upDateFile(FAFile faFile)
+	private static FAFile modifyFile(FAFile faFile)
 	{
 		faFile.setMemo("This is the file that was modified");
 		return faFile;
 	}
 	
+	private static FileRecord createFileRecord()
+	{
+		GregorianCalendar date7 = new GregorianCalendar(2018, 00, 20);
+		Timestamp sqlDate7 = new Timestamp(date7.getTimeInMillis());
+		FileRecord test7 = new FileRecord(3, "test3", "c:\\testfiles\\", 1,
+				"docx", sqlDate7);
+		return test7;
+	}	
 
 
 	

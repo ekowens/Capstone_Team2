@@ -37,7 +37,6 @@ public class DBConnection
 	// define the Derby connection URL to use
 	private String connectionURL = "jdbc:derby:C:/FileAid/" + dbName + ";create=true";
 	private Connection conn = null;
-	//private Statement statement = null;
 	
 	public DBConnection()
 	{
@@ -46,6 +45,22 @@ public class DBConnection
 
 	public void createDB()
 	{
+		// Read DDL into a String from an external text file
+		File sourceFile = new File("DBCreate.txt");
+		String ddl = "";
+		try
+		{
+			ddl = readAFile(sourceFile);
+		}
+		catch (FileNotFoundException e1)
+		{
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		// Split the single string into an array of strings, 
+		// each consisting of a single DDL statement
+		String[] createStrings = ddl.split("\\;");
+
 		try
 		{
 			Class.forName(driver);
@@ -59,20 +74,13 @@ public class DBConnection
 		{
 			conn = DriverManager.getConnection(connectionURL);
 			System.out.println("Connected to database " + dbName);
-
 			Statement statement = conn.createStatement();
-			// Create Database
-			// Read DDL into a String from an external text file
-			File sourceFile = new File("DBCreate.txt");
-			String ddl = readAFile(sourceFile);
-			// Split the single string into an array of strings, 
-			// each consisting of a single DDL statement
-			String[] createStrings = ddl.split("\\;");
 
+			// Create Database
 			// Create a statement to issue simple commands.
 			// Call utility method to check if FAFile table exists.
 			// Create the DB if needed
-			if (!FileAidPilotUtils.wwdChk4Table(conn))
+			if (!DBConnection.wwdChk4Table(conn))
 			{
 				System.out.println(" . . . . creating FileAid Database");
 				for (String createString : createStrings)
@@ -109,8 +117,6 @@ public class DBConnection
 					System.out.println("Database did not shut down normally");
 				}
 			}
-
-			// Beginning of the primary catch block: prints stack trace
 		}
 		catch (Throwable e)
 		{
@@ -140,7 +146,6 @@ public class DBConnection
 	// Deletes all records from database
 	public void clearDB()
 	{
-
 		try
 		{
 			Statement statement = conn.createStatement();
@@ -165,17 +170,19 @@ public class DBConnection
 		}
 	} // end clearDB
 	
-	// Given a FAFile ID, deletes that record, returns 1 if successful, 0 if record not found
-	public int deleteFAFile(int ID)
+	// Given a FAFile ID, deletes that record, returns true if successful, false if record not found
+	public boolean deleteFAFile(int ID)
 	{
 		int result = 0;
 		if (this.findFAFile(ID) != null)
 		{
-			result = 1;
+			String updateFAFile = "DELETE FROM FAFILE WHERE fiID=" + ID;
+			String updateFileRecord = "DELETE FROM FILERECORD WHERE frfiID=" + ID;
 			try
 			{
 				Statement statement = conn.createStatement();
-				statement.executeUpdate("DELETE FROM FAFILE WHERE fiID=" + ID);
+				statement.executeUpdate(updateFAFile);
+				statement.executeUpdate(updateFileRecord);
 				statement.close();
 			}
 			catch (SQLException e)
@@ -183,10 +190,12 @@ public class DBConnection
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			return true;
 		} // end if
-		return result;
+		return false;
 	}
 
+	// Convert Boolean Active to SmallInt for SQL table
 	public static int getActiveStatus(boolean active)
 	{
 		if (active)
@@ -218,17 +227,17 @@ public class DBConnection
 	             throw sqle; 
 	          }
 	      }
-	      //System.out.println("Just got the warning - table exists OK ");
 	      return true;
 	   }  /*** END wwdInitTable  **/
 	   
 	   public static int getNumTableRows(Connection conn, String tableName) throws SQLException
 	   {
            int numRows = 0;
+           String query = "select count(*) from " + tableName;
 		try
 		{
 			Statement stmt = conn.createStatement();
-            ResultSet results = stmt.executeQuery("select count(*) from " + tableName);
+            ResultSet results = stmt.executeQuery(query);
            while(results.next())
            	{
            	numRows = results.getInt(1);
@@ -236,7 +245,6 @@ public class DBConnection
 			stmt.close();
 			
 		}
-
 			catch (SQLException e)
 			{
 				// TODO Auto-generated catch block
@@ -244,9 +252,10 @@ public class DBConnection
 			}
 		   
 		   return numRows;
-	   }//end wwdChk4Table
+	   }//end getNumTableRows
 
-		public void createConnection()
+		//Checks for existence of DB, creates it if necessary, and establishes connection
+	   public void createConnection()
 		{
 			File directory = new File("c:/FileAid/jdbcFileAidPilotDB");
 			if (!directory.exists())
@@ -267,7 +276,6 @@ public class DBConnection
 					System.out.println("Database Exists with "
 							+ numRows + " file records.");
 				} // end if
-
 			}
 			catch (Exception except)
 			{
@@ -279,10 +287,11 @@ public class DBConnection
 		public ArrayList<FAFile> selectAllRecords()
 		{
 			ArrayList<FAFile> allFAFileRecords = new ArrayList<>();
+			String query = "select * from FAFILE";
 			try
 			{
 				Statement statement = conn.createStatement();
-				ResultSet results = statement.executeQuery("select * from FAFILE");
+				ResultSet results = statement.executeQuery(query);
 				int numRows = DBConnection.getNumTableRows(conn, "FAFILE");
 
 
@@ -314,15 +323,45 @@ public class DBConnection
 			}
 			return allFAFileRecords;
 		}// end selectAllRecords
+				
+		// Find a specific FAFile object given its ID, returns null if ID does not exist
+		public FAFile findFAFile(int ID)
+		{
+			FAFile faFile = null;
+			String query = "select * from FAFILE where fiID = " + ID;
+            try
+			{
+    			Statement statement = conn.createStatement();
+				ResultSet results = statement.executeQuery(query);
+				while (results.next())
+				{
+					faFile = new FAFile(results.getInt(1),
+							results.getString(3), results.getString(2),
+							results.getInt(4), results.getString(5),
+							results.getString(8), results.getTimestamp(7));
+				} // end while
+				results.close();
+				statement.close();
+
+			}
+			catch (SQLException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			return faFile;
+		}
 		
 		// Select FileRecords for a particular FAFile, Returns null if FAFile does not exist or has no records
 		public FileHistory selectFileRecords(int faFileID)
 		{
 			FileHistory fileRecords = new FileHistory();
+			String query = "select * from FILERECORD where frfiID = " + faFileID;
 			try
 			{
 				Statement statement = conn.createStatement();
-				ResultSet results = statement.executeQuery("select * from FILERECORD where frfiID = " + faFileID);
+				ResultSet results = statement.executeQuery(query);
 				int numRows = DBConnection.getNumTableRows(conn, "FILERECORD");
 
 				if (numRows == 0)
@@ -349,68 +388,52 @@ public class DBConnection
 			}
 			return fileRecords;
 		}// end selectRecords
-
-		
-		// Find a specific FAFile object given its ID, returns null if ID does not exist
-		public FAFile findFAFile(int ID)
-		{
-			FAFile faFile = null;
-            try
-			{
-    			Statement statement = conn.createStatement();
-				ResultSet results = statement.executeQuery
-						("select * from FAFILE where fiID = " + ID);
-				while (results.next())
-				{
-					faFile = new FAFile(results.getInt(1),
-							results.getString(3), results.getString(2),
-							results.getInt(4), results.getString(5),
-							results.getString(8), results.getTimestamp(7));
-				} // end while
-				results.close();
-				statement.close();
-
-			}
-			catch (SQLException e)
-			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
-			return faFile;
-		}
 		
 		// Update an existing FAFile
 		// Takes updated FAFile object and substitutes it for the existing FAFile record
-		public void upDateFAFile(FAFile faFile)
+		// Returns true if successful, false if FAFile does not exist.
+		public boolean upDateFAFile(FAFile faFile)
 		{
 			int ID = faFile.getID();
-			try
+			if(findFAFile(ID) != null)
 			{
-				Statement statement = conn.createStatement();
-				statement.executeUpdate("DELETE FROM FAFILE WHERE fiID=" + ID);
+				String update = "DELETE FROM FAFILE WHERE fiID=" + ID;
+				try
+				{
+					Statement statement = conn.createStatement();
+					statement.executeUpdate(update);
+					statement.close();
+				}
+				catch (SQLException e)
+				{
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				this.insertFile(faFile);
+				return true;
 			}
-			catch (SQLException e)
+			else
 			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				return false;
 			}
-			this.insertFile(faFile);			
 		}
 		
-		public void insertFile (FAFile file)
+	public boolean insertFile(FAFile file)
+	{
+		int ID = file.getID();
+		if (findFAFile(ID) == null)
 		{
+			String update = String.format(
+					"INSERT INTO FAFILE (fiID, fiPATH, fiNAME, fiSIZE, fiEXTENSION, fiACTIVE, fiMOD_DATE, fiMEMO) "
+							+ "VALUES(%d, '%s', '%s', %d, '%s', %d, '%s', '%s')",
+					file.getID(), file.getPath(), file.getName(),
+					file.getSize(), file.getExtension(),
+					getActiveStatus(file.isActive()), file.getModDate(),
+					file.getMemo());
+			Statement statement = null;
 			try
 			{
-				Statement statement = conn.createStatement();
-
-				String update = String.format(
-						"INSERT INTO FAFILE (fiID, fiPATH, fiNAME, fiSIZE, fiEXTENSION, fiACTIVE, fiMOD_DATE, fiMEMO) "
-								+ "VALUES(%d, '%s', '%s', %d, '%s', %d, '%s', '%s')",
-						file.getID(), file.getPath(), file.getName(),
-						file.getSize(), file.getExtension(),
-						getActiveStatus(file.isActive()),
-						file.getModDate(), file.getMemo());
+				statement = conn.createStatement();
 				statement.execute(update);
 				statement.close();
 			}
@@ -418,7 +441,58 @@ public class DBConnection
 			{
 				sqlExcept.printStackTrace();
 			}
-		}// end insertFile
+			finally
+			{
+				try
+				{
+					if (statement != null)
+					{
+						statement.close();
+					}
+				}
+				catch (SQLException e)
+				{
+				}
+			}
+			return true;
+		} // end if
+		else
+		{
+			return false;
+		}
+
+	}// end insertFile
+	
+	// Adds a FileRecord, return false if associated FAFile does not exist
+	public boolean insertFileRecord(FileRecord fileRecord)
+	{
+		int ID = fileRecord.getFAFileID();
+		if (findFAFile(ID) != null)
+		{
+			String update = String.format(
+					"INSERT INTO FILERECORD (frfiID, frPATH, frNAME, frSIZE, frEXTENSION, frMOD_DATE) "
+							+ "VALUES(%d, '%s', '%s', %d, '%s', '%s')",
+							fileRecord.getFAFileID(), fileRecord.getPath(), fileRecord.getName(),
+							fileRecord.getSize(), fileRecord.getExtension(), fileRecord.getModDate());
+			Statement statement = null;
+			try
+			{
+				statement = conn.createStatement();
+				statement.execute(update);
+				statement.close();
+			}
+			catch (SQLException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
 
 		public void shutdown()
 		{
