@@ -80,98 +80,6 @@ public class DBConnection
 					statement.execute(createString);
 					}
 			}
-
-			// Create File data for test
-			// Create dates for File records
-		    GregorianCalendar date1 = new GregorianCalendar(2018, 01, 20);
-		    Timestamp sqlDate1 = new Timestamp(date1.getTimeInMillis());
-		    GregorianCalendar date2 = new GregorianCalendar(2018, 01, 21);
-		    Timestamp sqlDate2 = new Timestamp(date2.getTimeInMillis());
-		    GregorianCalendar date3 = new GregorianCalendar(2018, 01, 22);
-		    Timestamp sqlDate3 = new Timestamp(date3.getTimeInMillis());
-		    
-		    
-			FAFile Test1 = new FAFile(1, "test1", "c:\\testfiles\\", 1, "docx",
-					sqlDate1);
-			FAFile Test2 = new FAFile(2, "test2", "c:\\testfiles\\", 1, "xlsx",
-					sqlDate2);
-			FAFile Test3 = new FAFile(3, "test3", "c:\\testfiles\\", 1, "pptx",
-					sqlDate3);
-
-			System.out.println("\nFile data to be inserted");
-			System.out.println(Test1);
-			System.out.println(Test2);
-			System.out.println(Test3);
-
-
-			String update = String.format(
-					"INSERT INTO FAFILE (fiID, fiPATH, fiNAME, fiSIZE, fiEXTENSION, fiACTIVE, fiMOD_DATE, fiMEMO) "
-							+ "VALUES(%d, '%s', '%s', %d, '%s', %d, '%s', '%s')",
-					Test1.getID(), Test1.getPath(), Test1.getName(),
-					Test1.getSize(), Test1.getExtension(),
-					getActiveStatus(Test1.isActive()), Test1.getModDate(), Test1.getMemo());
-			statement.executeUpdate(update);
-
-			update = String.format(
-					"INSERT INTO FAFILE (fiID, fiPATH, fiNAME, fiSIZE, fiEXTENSION, fiACTIVE, fiMOD_DATE, fiMEMO) "
-							+ "VALUES(%d, '%s', '%s', %d, '%s', %d, '%s', '%s')",
-					Test2.getID(), Test2.getPath(), Test2.getName(),
-					Test2.getSize(), Test2.getExtension(),
-					getActiveStatus(Test2.isActive()), Test2.getModDate(), Test2.getMemo());
-			statement.executeUpdate(update);
-
-			update = String.format(
-					"INSERT INTO FAFILE (fiID, fiPATH, fiNAME, fiSIZE, fiEXTENSION, fiACTIVE, fiMOD_DATE, fiMEMO) "
-							+ "VALUES(%d, '%s', '%s', %d, '%s', %d, '%s', '%s')",
-					Test3.getID(), Test3.getPath(), Test3.getName(),
-					Test3.getSize(), Test3.getExtension(),
-					getActiveStatus(Test3.isActive()), Test3.getModDate(), Test3.getMemo());
-			statement.executeUpdate(update);
-			
-			// Create Test Data for FILERECORD
-		    GregorianCalendar date4 = new GregorianCalendar(2018, 00, 20);
-		    Timestamp sqlDate4 = new Timestamp(date4.getTimeInMillis());
-		    GregorianCalendar date5 = new GregorianCalendar(2018, 00, 21);
-		    Timestamp sqlDate5 = new Timestamp(date5.getTimeInMillis());
-		    GregorianCalendar date6 = new GregorianCalendar(2018, 00, 22);
-		    Timestamp sqlDate6 = new Timestamp(date6.getTimeInMillis());
-
-			FileRecord Test4 = new FileRecord(1, 1, "test1", "c:\\testfiles\\", 1, "docx",
-					sqlDate4);
-			FileRecord Test5 = new FileRecord(2, 1, "test1", "c:\\testfiles\\", 1, "docx",
-					sqlDate5);
-			FileRecord Test6 = new FileRecord(3, 1, "test1", "c:\\testfiles\\", 1, "docx",
-					sqlDate6);
-
-			System.out.println("\nFileRecord data to be inserted");
-			System.out.println(Test4);
-			System.out.println(Test5);
-			System.out.println(Test6);
-			
-			update = String.format(
-					"INSERT INTO FILERECORD (frID, frfiID, frPATH, frNAME, frSIZE, frEXTENSION, frMOD_DATE) "
-							+ "VALUES(%d, %d, '%s', '%s', %d, '%s', '%s')",
-					Test4.getID(), Test4.getFAFileID(), Test4.getPath(), Test4.getName(),
-					Test4.getSize(), Test4.getExtension(),
-					Test4.getModDate());
-			statement.executeUpdate(update);
-
-			update = String.format(
-					"INSERT INTO FILERECORD (frID, frfiID, frPATH, frNAME, frSIZE, frEXTENSION, frMOD_DATE) "
-							+ "VALUES(%d, %d, '%s', '%s', %d, '%s', '%s')",
-					Test5.getID(), Test5.getFAFileID(), Test5.getPath(),
-					Test5.getName(), Test5.getSize(), Test5.getExtension(),
-					Test5.getModDate());
-			statement.executeUpdate(update);
-
-			update = String.format(
-					"INSERT INTO FILERECORD (frID, frfiID, frPATH, frNAME, frSIZE, frEXTENSION, frMOD_DATE) "
-							+ "VALUES(%d, %d, '%s', '%s', %d, '%s', '%s')",
-					Test6.getID(), Test6.getFAFileID(), Test6.getPath(),
-					Test6.getName(), Test6.getSize(), Test6.getExtension(),
-					Test6.getModDate());
-			statement.executeUpdate(update);
-
 			
 			// Release the resources (clean up )
 			statement.close();
@@ -237,13 +145,9 @@ public class DBConnection
 		{
 			Statement statement = conn.createStatement();
 
-			// Call utility method to check if table exists.
-			// Create the table if needed
-			if (wwdChk4Table(conn))
-			{
-				System.out.println(" . . . . clearing table FAFILE");
+				System.out.println(" . . . . clearing FileAid Database");
 				statement.executeUpdate("DELETE FROM FAFILE WHERE 1=1");
-			}
+				statement.executeUpdate("DELETE FROM FILERECORD WHERE 1=1");
 
 			// Release the resources (clean up )
 			statement.close();
@@ -371,6 +275,7 @@ public class DBConnection
 			}
 		}// end createConnection
 
+		// Returns an ArrayList of all FAFile records in DB; returns null if there are none
 		public ArrayList<FAFile> selectAllRecords()
 		{
 			ArrayList<FAFile> allFAFileRecords = new ArrayList<>();
@@ -380,23 +285,23 @@ public class DBConnection
 				ResultSet results = statement.executeQuery("select * from FAFILE");
 				int numRows = DBConnection.getNumTableRows(conn, "FAFILE");
 
-				System.out.println(
-						"\n-------------------------------------------------");
 
 				if (numRows == 0)
 				{
-					System.out
-							.println("There are no records in FAFILE.");
+					return null;
 				}
 				else
 				{
 
 					while (results.next())
 					{
+					    FileHistory fileHistory = selectFileRecords(results.getInt(1));
+
 						FAFile newFAFile = new FAFile(results.getInt(1),
 								results.getString(3), results.getString(2),
 								results.getInt(4), results.getString(5),
-								results.getString(8), results.getTimestamp(7));
+								results.getString(8), results.getTimestamp(7),
+								fileHistory);
 						allFAFileRecords.add(newFAFile);
 					} // end while
 					results.close();
@@ -408,7 +313,43 @@ public class DBConnection
 				sqlExcept.printStackTrace();
 			}
 			return allFAFileRecords;
+		}// end selectAllRecords
+		
+		// Select FileRecords for a particular FAFile, Returns null if FAFile does not exist or has no records
+		public FileHistory selectFileRecords(int faFileID)
+		{
+			FileHistory fileRecords = new FileHistory();
+			try
+			{
+				Statement statement = conn.createStatement();
+				ResultSet results = statement.executeQuery("select * from FILERECORD where frfiID = " + faFileID);
+				int numRows = DBConnection.getNumTableRows(conn, "FILERECORD");
+
+				if (numRows == 0)
+				{
+					return null;
+				}
+				else
+				{
+					while (results.next())
+					{
+						FileRecord newFileRecord = new FileRecord(results.getInt(2),
+								results.getString(4), results.getString(3),
+								results.getInt(5), results.getString(6),
+								results.getTimestamp(7));
+						fileRecords.add(newFileRecord);
+					} // end while
+					results.close();
+					statement.close();
+				}
+			}
+			catch (SQLException sqlExcept)
+			{
+				sqlExcept.printStackTrace();
+			}
+			return fileRecords;
 		}// end selectRecords
+
 		
 		// Find a specific FAFile object given its ID, returns null if ID does not exist
 		public FAFile findFAFile(int ID)
@@ -508,6 +449,113 @@ public class DBConnection
 			scan.close();
 			return charBuffer;
 		} // end readAFile
+		
+		// Inserts data for testing purposes
+		public void insertTestData()
+		{
+			Statement statement;
+			try
+			{
+				statement = conn.createStatement();
+				// Create File data for test
+				// Create dates for File records
+			    GregorianCalendar date1 = new GregorianCalendar(2018, 01, 20);
+			    Timestamp sqlDate1 = new Timestamp(date1.getTimeInMillis());
+			    GregorianCalendar date2 = new GregorianCalendar(2018, 01, 21);
+			    Timestamp sqlDate2 = new Timestamp(date2.getTimeInMillis());
+			    GregorianCalendar date3 = new GregorianCalendar(2018, 01, 22);
+			    Timestamp sqlDate3 = new Timestamp(date3.getTimeInMillis());
+			    
+			    
+				FAFile Test1 = new FAFile(1, "test1", "c:\\testfiles\\", 1, "docx",
+						sqlDate1);
+				FAFile Test2 = new FAFile(2, "test2", "c:\\testfiles\\", 1, "xlsx",
+						sqlDate2);
+				FAFile Test3 = new FAFile(3, "test3", "c:\\testfiles\\", 1, "pptx",
+						sqlDate3);
+
+				System.out.println("\nFile data to be inserted");
+				System.out.println(Test1);
+				System.out.println(Test2);
+				System.out.println(Test3);
+
+
+				String update = String.format(
+						"INSERT INTO FAFILE (fiID, fiPATH, fiNAME, fiSIZE, fiEXTENSION, fiACTIVE, fiMOD_DATE, fiMEMO) "
+								+ "VALUES(%d, '%s', '%s', %d, '%s', %d, '%s', '%s')",
+						Test1.getID(), Test1.getPath(), Test1.getName(),
+						Test1.getSize(), Test1.getExtension(),
+						getActiveStatus(Test1.isActive()), Test1.getModDate(), Test1.getMemo());
+				statement.executeUpdate(update);
+
+				update = String.format(
+						"INSERT INTO FAFILE (fiID, fiPATH, fiNAME, fiSIZE, fiEXTENSION, fiACTIVE, fiMOD_DATE, fiMEMO) "
+								+ "VALUES(%d, '%s', '%s', %d, '%s', %d, '%s', '%s')",
+						Test2.getID(), Test2.getPath(), Test2.getName(),
+						Test2.getSize(), Test2.getExtension(),
+						getActiveStatus(Test2.isActive()), Test2.getModDate(), Test2.getMemo());
+				statement.executeUpdate(update);
+
+				update = String.format(
+						"INSERT INTO FAFILE (fiID, fiPATH, fiNAME, fiSIZE, fiEXTENSION, fiACTIVE, fiMOD_DATE, fiMEMO) "
+								+ "VALUES(%d, '%s', '%s', %d, '%s', %d, '%s', '%s')",
+						Test3.getID(), Test3.getPath(), Test3.getName(),
+						Test3.getSize(), Test3.getExtension(),
+						getActiveStatus(Test3.isActive()), Test3.getModDate(), Test3.getMemo());
+				statement.executeUpdate(update);
+				
+				// Create Test Data for FILERECORD
+			    GregorianCalendar date4 = new GregorianCalendar(2018, 00, 20);
+			    Timestamp sqlDate4 = new Timestamp(date4.getTimeInMillis());
+			    GregorianCalendar date5 = new GregorianCalendar(2018, 00, 21);
+			    Timestamp sqlDate5 = new Timestamp(date5.getTimeInMillis());
+			    GregorianCalendar date6 = new GregorianCalendar(2018, 00, 22);
+			    Timestamp sqlDate6 = new Timestamp(date6.getTimeInMillis());
+
+				FileRecord Test4 = new FileRecord(1, "test1", "c:\\testfiles\\", 1, "docx",
+						sqlDate4);
+				FileRecord Test5 = new FileRecord(1, "test1", "c:\\testfiles\\", 1, "docx",
+						sqlDate5);
+				FileRecord Test6 = new FileRecord(1, "test1", "c:\\testfiles\\", 1, "docx",
+						sqlDate6);
+
+				System.out.println("\nFileRecord data to be inserted");
+				System.out.println(Test4);
+				System.out.println(Test5);
+				System.out.println(Test6);
+				
+				update = String.format(
+						"INSERT INTO FILERECORD (frfiID, frPATH, frNAME, frSIZE, frEXTENSION, frMOD_DATE) "
+								+ "VALUES(%d, '%s', '%s', %d, '%s', '%s')",
+						Test4.getFAFileID(), Test4.getPath(), Test4.getName(),
+						Test4.getSize(), Test4.getExtension(),
+						Test4.getModDate());
+				statement.executeUpdate(update);
+
+				update = String.format(
+						"INSERT INTO FILERECORD (frfiID, frPATH, frNAME, frSIZE, frEXTENSION, frMOD_DATE) "
+								+ "VALUES(%d, '%s', '%s', %d, '%s', '%s')",
+						Test5.getFAFileID(), Test5.getPath(),
+						Test5.getName(), Test5.getSize(), Test5.getExtension(),
+						Test5.getModDate());
+				statement.executeUpdate(update);
+
+				update = String.format(
+						"INSERT INTO FILERECORD (frfiID, frPATH, frNAME, frSIZE, frEXTENSION, frMOD_DATE) "
+								+ "VALUES(%d, '%s', '%s', %d, '%s', '%s')",
+						Test6.getFAFileID(), Test6.getPath(),
+						Test6.getName(), Test6.getSize(), Test6.getExtension(),
+						Test6.getModDate());
+				statement.executeUpdate(update);
+				statement.close();
+			}
+			catch (SQLException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+		}
 
 } // end class
 

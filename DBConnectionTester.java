@@ -50,16 +50,25 @@ public class DBConnectionTester
 					+ "\n4 \tDelete a Record"
 					+ "\n5 \tReturn Record with ID = 1"
 					+ "\n6 \tModify a Record" 
-					+ "\n7 \tExit" 
+					+ "\n7 \tInsert Test Data  (Don't do this twice without clearing the DB)"
+					+ "\n8 \tReturn FileRecords for a particular FAFile"
+					+ "\n9 \tExit" 
 					+ "\nChoice: ");
 			int response = scan.nextInt();
 			switch (response)
 			{
 			case 1:
 				ArrayList<FAFile> allFAFiles = dbConnection.selectAllRecords();
-				for ( FAFile faFile : allFAFiles)
+				if (allFAFiles == null)
 				{
-					System.out.println("\n" + faFile.toString());
+					System.out.println("No FAFile records in database");
+				}
+				else
+				{
+					for (FAFile faFile : allFAFiles)
+					{
+						System.out.println("\n" + faFile.toString());
+					}
 				}
 				break;
 			case 2:
@@ -102,6 +111,27 @@ public class DBConnectionTester
 				break;
 				
 			case 7:
+				dbConnection.insertTestData();
+				break;
+
+			case 8:
+				System.out.print("Enter a FAFile ID: ");
+				int faFileID = scan.nextInt();				
+				ArrayList<FileRecord> fileRecords = dbConnection.selectFileRecords(faFileID);
+				if (fileRecords == null)
+				{
+					System.out.println("\nThis FAFile does not exist or has no FileRecords");
+				}
+				else
+				{					
+					for ( FileRecord fileRecord : fileRecords)
+					{
+						System.out.println("\n" + fileRecord.toString());
+					}				
+				}
+				break;
+
+			case 9:
 				exit = true;
 				break;
 			default:

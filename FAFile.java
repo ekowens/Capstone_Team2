@@ -34,6 +34,17 @@ public class FAFile implements Comparable<FAFile> {
 	}
 	
 	public FAFile(int newID, String newName, String newPath, int newSize, 
+			String newExtension, Timestamp newModDate, FileHistory newHistory){
+		id = newID;
+		name = newName;
+		path = newPath;
+		size = newSize;
+		extension = newExtension;
+		modDate = newModDate;
+		history = newHistory;
+	}
+	
+	public FAFile(int newID, String newName, String newPath, int newSize, 
 			String newExtension, String newMemo, Timestamp newModDate){
 		id = newID;
 		name = newName;
@@ -42,6 +53,19 @@ public class FAFile implements Comparable<FAFile> {
 		extension = newExtension;
 		memo = newMemo;
 		modDate = newModDate;
+	}
+	
+	public FAFile(int newID, String newName, String newPath, int newSize, 
+			String newExtension, String newMemo, Timestamp newModDate,
+			FileHistory newHistory){
+		id = newID;
+		name = newName;
+		path = newPath;
+		size = newSize;
+		extension = newExtension;
+		memo = newMemo;
+		modDate = newModDate;
+		history = newHistory;
 	}
 	
 	
@@ -133,6 +157,14 @@ public class FAFile implements Comparable<FAFile> {
 		if (memo != "")
 		{
 			fileString = fileString + "\nMemo: " + memo;
+		}
+		
+		if (history != null)
+		{
+			for( FileRecord fileRecord : history)
+			{
+				fileString = fileString + "\n" + fileRecord.toString();
+			}
 		}
 		return fileString;
 	}

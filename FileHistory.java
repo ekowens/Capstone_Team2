@@ -12,7 +12,7 @@ public class FileHistory extends ArrayList<FileRecord> {
 	private int updateCount = 0;
 	
 	public FileHistory(){}
-	
+		
 	public FileRecord getRecord(int x){
 		return this.get(x);
 	}
