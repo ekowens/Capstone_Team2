@@ -1,5 +1,5 @@
-import java.io.File;
-import java.io.FileNotFoundException;
+
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.GregorianCalendar;
@@ -53,7 +53,9 @@ public class DBConnectionTester
 					+ "\n7 \tInsert Test Data  (Don't do this twice without clearing the DB)"
 					+ "\n8 \tReturn FileRecords for a particular FAFile"
 					+ "\n9 \tAdd a FileRecord to FAFile ID = 3" 
-					+ "\n10 \tExit" 
+					+ "\n10 \tBack up FileAid to c:/FileAidBackups/yyyy-MM-dd/" 
+					+ "\n11 \tRestore a backup" 
+					+ "\n12 \tExit" 
 					+ "\nChoice: ");
 			int response = scan.nextInt();
 			switch (response)
@@ -162,6 +164,33 @@ public class DBConnectionTester
 				break;
 				
 			case 10:
+				try
+				{
+					dbConnection.backUpDatabase();
+				}
+				catch (SQLException e)
+				{
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				break;
+
+			case 11:
+				System.out.print("Enter the name of the backup directory: ");
+				String backupDirectory = scan.next();
+				success = dbConnection.restoreDatase(backupDirectory);
+				if (success)
+				{
+					System.out.println("\nDatabase Restored");
+				    dbConnection.createConnection();
+				}
+				else
+				{
+					System.out.println("\nBackup Directory does not exist.");
+				}
+				break;
+
+			case 12:
 				exit = true;
 				break;
 			default:
@@ -177,7 +206,7 @@ public class DBConnectionTester
 	{
 		GregorianCalendar date1 = new GregorianCalendar(2018, 01, 19);
 		Timestamp sqlDate1 = new Timestamp(date1.getTimeInMillis());
-		FAFile test1 = new FAFile(3, "test3", "c:\\testfiles\\", 3, "docx",
+		FAFile test1 = new FAFile(4, "test4", "c:\\testfiles\\", 3, "docx",
 				sqlDate1);
 		return test1;
 	} // end createFile

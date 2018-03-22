@@ -1,5 +1,6 @@
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -22,18 +23,17 @@ import java.util.Scanner;
 ////////////////////////////////////////////////////////////////////////////////
 
 /**
- * (Insert a comment that briefly describes the purpose of this class definition.)
- *
- * <p/> Bugs: (List any known issues or unimplemented features here)
+ * Manages data traffic to and from  FileAid SQL Database
  * 
- * @author (Insert your first and last name)
+ * @author David Matthews
  *
  */
+
 public class DBConnection
 
 {
 	private String driver = "org.apache.derby.jdbc.EmbeddedDriver";
-	private String dbName = "jdbcFileAidPilotDB";
+	private String dbName = "FileAidDB";
 	// define the Derby connection URL to use
 	private String connectionURL = "jdbc:derby:C:/FileAid/" + dbName + ";create=true";
 	private Connection conn = null;
@@ -43,6 +43,9 @@ public class DBConnection
 		
 	}
 
+//////////////////DB Creation, Connection, and Shutdown Utilities////////////////////////
+	
+	// Creates database structure; should only be called by createConnection
 	public void createDB()
 	{
 		// Read DDL into a String from an external text file
@@ -93,7 +96,7 @@ public class DBConnection
 			statement.close();
 			//System.out.println("Closed connection");
 
-			// ## DATABASE SHUTDOWN SECTION ##
+			// Database Shutdown
 			/***
 			 * In embedded mode, an application should shut down Derby. Shutdown
 			 * throws the XJ015 exception to confirm success.
@@ -140,9 +143,58 @@ public class DBConnection
 			}
 		}
 		System.out.println("\nFileAid Installed.");
-
 	}
 	
+	//Checks for existence of DB, creates it if necessary, and establishes connection
+	   public void createConnection()
+		{
+			File directory = new File("c:/FileAid/" + dbName);
+			if (!directory.exists())
+			{
+				System.out.println("FileAid has not been installed.");
+				System.out.println("...Creating Database");
+				createDB();
+			}
+			try
+			{
+				Class.forName("org.apache.derby.jdbc.EmbeddedDriver").newInstance();
+				// Get a connection
+				conn = DriverManager.getConnection(connectionURL);
+
+				if (wwdChk4Table(conn))
+				{
+					int numRows = DBConnection.getNumTableRows(conn, "FAFILE");
+					System.out.println("Database Exists with "
+							+ numRows + " file records.");
+				} // end if
+			}
+			catch (Exception except)
+			{
+				except.printStackTrace();
+			}
+		}// end createConnection
+
+		// Shutdown the database
+	   public void shutdown()
+		{
+			try
+			{
+				if (conn != null)
+				{
+					DriverManager.getConnection(connectionURL + ";shutdown=true");
+					conn.close();
+				}
+			}
+			catch (SQLException sqlExcept)
+			{
+
+			}
+			System.out.println("\n\nFileAid DB shut down succcessfully");
+
+		} // end shutdown
+
+//////////////////DB Management////////////////////////////////////////////
+		
 	// Deletes all records from database
 	public void clearDB()
 	{
@@ -173,7 +225,6 @@ public class DBConnection
 	// Given a FAFile ID, deletes that record, returns true if successful, false if record not found
 	public boolean deleteFAFile(int ID)
 	{
-		int result = 0;
 		if (this.findFAFile(ID) != null)
 		{
 			String updateFAFile = "DELETE FROM FAFILE WHERE fiID=" + ID;
@@ -195,21 +246,9 @@ public class DBConnection
 		return false;
 	}
 
-	// Convert Boolean Active to SmallInt for SQL table
-	public static int getActiveStatus(boolean active)
-	{
-		if (active)
-		{
-			return 1;
-		}
-		else
-		{
-			return 0;
-		}
-	}//end getActiveStatus
 	
 	/***      Check for  FILE table    ****/
-	   public static boolean wwdChk4Table (Connection conTst ) throws SQLException {
+	   private static boolean wwdChk4Table (Connection conTst ) throws SQLException {
 	      try {
 	         Statement s = conTst.createStatement();
 	         s.execute("update FAFILE set fiID = 999, fiPATH = 'C:\', fiNAME = 'TEST ENTRY', fiSIZE = 1, fiEXTENSION = '.DOCX',"
@@ -230,59 +269,6 @@ public class DBConnection
 	      return true;
 	   }  /*** END wwdInitTable  **/
 	   
-	   public static int getNumTableRows(Connection conn, String tableName) throws SQLException
-	   {
-           int numRows = 0;
-           String query = "select count(*) from " + tableName;
-		try
-		{
-			Statement stmt = conn.createStatement();
-            ResultSet results = stmt.executeQuery(query);
-           while(results.next())
-           	{
-           	numRows = results.getInt(1);
-           	}
-			stmt.close();
-			
-		}
-			catch (SQLException e)
-			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		   
-		   return numRows;
-	   }//end getNumTableRows
-
-		//Checks for existence of DB, creates it if necessary, and establishes connection
-	   public void createConnection()
-		{
-			File directory = new File("c:/FileAid/jdbcFileAidPilotDB");
-			if (!directory.exists())
-			{
-				System.out.println("FileAid has not been installed.");
-				System.out.println("...Creating Database");
-				createDB();
-			}
-			try
-			{
-				Class.forName("org.apache.derby.jdbc.EmbeddedDriver").newInstance();
-				// Get a connection
-				conn = DriverManager.getConnection(connectionURL);
-
-				if (wwdChk4Table(conn))
-				{
-					int numRows = DBConnection.getNumTableRows(conn, "FAFILE");
-					System.out.println("Database Exists with "
-							+ numRows + " file records.");
-				} // end if
-			}
-			catch (Exception except)
-			{
-				except.printStackTrace();
-			}
-		}// end createConnection
-
 		// Returns an ArrayList of all FAFile records in DB; returns null if there are none
 		public ArrayList<FAFile> selectAllRecords()
 		{
@@ -335,10 +321,13 @@ public class DBConnection
 				ResultSet results = statement.executeQuery(query);
 				while (results.next())
 				{
+				    FileHistory fileHistory = selectFileRecords(results.getInt(1));
+
 					faFile = new FAFile(results.getInt(1),
 							results.getString(3), results.getString(2),
 							results.getInt(4), results.getString(5),
-							results.getString(8), results.getTimestamp(7));
+							results.getString(8), results.getTimestamp(7),
+							fileHistory);
 				} // end while
 				results.close();
 				statement.close();
@@ -492,25 +481,103 @@ public class DBConnection
 		{
 			return false;
 		}
+	} // end insertFileRecord
+	
+	// Back up FileAid to a directory named today's date in format yyyy-MM-dd
+	// Method directly from Derby Documentation
+	public void backUpDatabase() throws SQLException
+	{
+		// Get today's date as a string:
+		java.text.SimpleDateFormat todaysDate = new java.text.SimpleDateFormat(
+				"yyyy-MM-dd");
+		String backupdirectory = "c:/FileAidBackups/" + todaysDate
+				.format((java.util.Calendar.getInstance()).getTime());
+		CallableStatement cs = conn
+				.prepareCall("CALL SYSCS_UTIL.SYSCS_BACKUP_DATABASE(?)");
+		cs.setString(1, backupdirectory);
+		cs.execute();
+		cs.close();
+		System.out.println("Backed up database to " + backupdirectory);
 	}
-
-		public void shutdown()
+	
+	//Restores database from c:/FileAidBackups/backupName
+	//Assumes FileAid is currently running
+	public boolean restoreDatase(String backupDirectory)
+	{
+		backupDirectory = "c:/FileAidBackups/" + backupDirectory + "/" + dbName;
+		File backupDirectoryFile = new File(backupDirectory);
+		if (!backupDirectoryFile.exists())
 		{
+			System.out.println("\nBackup Directory " + backupDirectory + " does not exist.");
+			return false;
+		}
+		else
+		{
+		
+		shutdown();
+		String restoreConnectionURL = "jdbc:derby:C:/FileAid/" + dbName + "; restoreFrom=" + backupDirectory;
+		try
+		{
+			Class.forName("org.apache.derby.jdbc.EmbeddedDriver").newInstance();
+			// Get a connection
+			conn = DriverManager.getConnection(restoreConnectionURL);
+		}
+		catch (InstantiationException | IllegalAccessException
+				| ClassNotFoundException | SQLException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		if (driver.equals("org.apache.derby.jdbc.EmbeddedDriver"))
+		{
+			boolean gotSQLExc = false;
 			try
 			{
-				if (conn != null)
+				DriverManager.getConnection("jdbc:derby:;shutdown=true");
+			}
+			catch (SQLException se)
+			{
+				if (se.getSQLState().equals("XJ015"))
 				{
-					DriverManager.getConnection(connectionURL + ";shutdown=true");
-					conn.close();
+					gotSQLExc = true;
 				}
 			}
-			catch (SQLException sqlExcept)
+			if (!gotSQLExc)
 			{
-
+				System.out.println("Database did not shut down normally");
 			}
-			System.out.println("\n\nFileAid DB shut down succcessfully");
+		}
+		return true;
+		}// end else
+	} // end restoreDatabase
 
-		} // end shutdown
+//////////////////DBConnection Internal Utilities//////////////////////////////////////////
+	
+	// Using provided connection, returns number of rows in tablename   
+	public static int getNumTableRows(Connection conn, String tableName) throws SQLException
+	   {
+        int numRows = 0;
+        String query = "select count(*) from " + tableName;
+		try
+		{
+			Statement stmt = conn.createStatement();
+         ResultSet results = stmt.executeQuery(query);
+        while(results.next())
+        	{
+        	numRows = results.getInt(1);
+        	}
+			stmt.close();
+			
+		}
+			catch (SQLException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		   
+		   return numRows;
+	   }//end getNumTableRows
 
 		public static String readAFile(File fileName) throws FileNotFoundException {
 
@@ -524,6 +591,19 @@ public class DBConnection
 			return charBuffer;
 		} // end readAFile
 		
+		// Convert Boolean Active to SmallInt for SQL table
+		private static int getActiveStatus(boolean active)
+		{
+			if (active)
+			{
+				return 1;
+			}
+			else
+			{
+				return 0;
+			}
+		}//end getActiveStatus
+
 		// Inserts data for testing purposes
 		public void insertTestData()
 		{
