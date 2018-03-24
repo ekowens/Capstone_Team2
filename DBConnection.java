@@ -203,8 +203,9 @@ public class DBConnection
 			Statement statement = conn.createStatement();
 
 				System.out.println(" . . . . clearing FileAid Database");
-				statement.executeUpdate("DELETE FROM FAFILE WHERE 1=1");
 				statement.executeUpdate("DELETE FROM FILERECORD WHERE 1=1");
+				statement.executeUpdate("DELETE FROM FAFILE WHERE 1=1");
+				//statement.executeUpdate("DELETE FROM SUMMARYRECORD WHERE 1=1");
 
 			// Release the resources (clean up )
 			statement.close();
@@ -227,13 +228,13 @@ public class DBConnection
 	{
 		if (this.findFAFile(ID) != null)
 		{
-			String updateFAFile = "DELETE FROM FAFILE WHERE fiID=" + ID;
 			String updateFileRecord = "DELETE FROM FILERECORD WHERE frfiID=" + ID;
+			String updateFAFile = "DELETE FROM FAFILE WHERE fiID=" + ID;
 			try
 			{
 				Statement statement = conn.createStatement();
-				statement.executeUpdate(updateFAFile);
 				statement.executeUpdate(updateFileRecord);
+				statement.executeUpdate(updateFAFile);
 				statement.close();
 			}
 			catch (SQLException e)
@@ -386,7 +387,8 @@ public class DBConnection
 			int ID = faFile.getID();
 			if(findFAFile(ID) != null)
 			{
-				String update = "DELETE FROM FAFILE WHERE fiID=" + ID;
+				String update = "DELETE FROM FILERECORD WHERE frfiID =" + ID;
+				update = "DELETE FROM FAFILE WHERE fiID=" + ID;
 				try
 				{
 					Statement statement = conn.createStatement();
@@ -398,7 +400,7 @@ public class DBConnection
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				this.insertFile(faFile);
+				insertFile(faFile);
 				return true;
 			}
 			else
@@ -409,10 +411,11 @@ public class DBConnection
 		
 	public boolean insertFile(FAFile file)
 	{
+		String update = ""; 
 		int ID = file.getID();
 		if (findFAFile(ID) == null)
 		{
-			String update = String.format(
+			update = String.format(
 					"INSERT INTO FAFILE (fiID, fiPATH, fiNAME, fiSIZE, fiEXTENSION, fiACTIVE, fiMOD_DATE, fiMEMO) "
 							+ "VALUES(%d, '%s', '%s', %d, '%s', %d, '%s', '%s')",
 					file.getID(), file.getPath(), file.getName(),
@@ -429,19 +432,6 @@ public class DBConnection
 			catch (SQLException sqlExcept)
 			{
 				sqlExcept.printStackTrace();
-			}
-			finally
-			{
-				try
-				{
-					if (statement != null)
-					{
-						statement.close();
-					}
-				}
-				catch (SQLException e)
-				{
-				}
 			}
 			return true;
 		} // end if
@@ -482,6 +472,64 @@ public class DBConnection
 			return false;
 		}
 	} // end insertFileRecord
+	
+	public void insertSummaryRecord(SummaryRecord sr)
+	{
+		String update = String.format(
+				"INSERT INTO SUMMARYRECORD (srDATETIMECHECK, srNUMFILES, srDISKSPACE,"
+				+ "srNUMFILESADDED, srNUMFILESDELETED, srNUMFILESMODIFIED) "
+				+ "VALUES('%s', %d, %d, %d, %d, %d)",
+				sr.getDateTimeCheck(), sr.getNumFiles(), sr.getDiskSpace(),
+				sr.getNumFilesAdded(), sr.getNumFilesDeleted(), sr.getNumFilesModified());
+		Statement statement = null;
+		try
+		{
+			statement = conn.createStatement();
+			statement.execute(update);
+			statement.close();
+		}
+		catch (SQLException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	} // end insertSummaryRecord
+	
+	// Returns all SummaryRecord records; return null if there are none
+	public ArrayList<SummaryRecord> getSummaryRecords()
+	{
+		ArrayList<SummaryRecord> summaryRecords = new ArrayList<>();
+		String query = "select * from SummaryRecord";
+		try
+		{
+			Statement statement = conn.createStatement();
+			ResultSet results = statement.executeQuery(query);
+			int numRows = DBConnection.getNumTableRows(conn, "SUMMARYRECORD");
+
+			if (numRows == 0)
+			{
+				return null;
+			}
+			else
+			{
+				while (results.next())
+				{
+					SummaryRecord summaryRecord = new SummaryRecord(results.getTimestamp(2),
+							results.getInt(3), results.getInt(4),
+							results.getInt(5), results.getInt(6),
+							results.getInt(7));
+					summaryRecords.add(summaryRecord);
+				} // end while
+				results.close();
+				statement.close();
+			}
+		}
+		catch (SQLException sqlExcept)
+		{
+			sqlExcept.printStackTrace();
+		}		
+		return summaryRecords;
+	} // end getSummaryRecords
 	
 	// Back up FileAid to a directory named today's date in format yyyy-MM-dd
 	// Method directly from Derby Documentation
@@ -552,10 +600,10 @@ public class DBConnection
 		}// end else
 	} // end restoreDatabase
 
-//////////////////DBConnection Internal Utilities//////////////////////////////////////////
+//////////////////DBConnection Internal Helper Methods//////////////////////////////////////////
 	
 	// Using provided connection, returns number of rows in tablename   
-	public static int getNumTableRows(Connection conn, String tableName) throws SQLException
+	private static int getNumTableRows(Connection conn, String tableName) throws SQLException
 	   {
         int numRows = 0;
         String query = "select count(*) from " + tableName;
@@ -579,7 +627,7 @@ public class DBConnection
 		   return numRows;
 	   }//end getNumTableRows
 
-		public static String readAFile(File fileName) throws FileNotFoundException {
+		private static String readAFile(File fileName) throws FileNotFoundException {
 
 			Scanner scan = new Scanner(fileName);
 

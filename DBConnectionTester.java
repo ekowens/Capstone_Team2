@@ -44,7 +44,7 @@ public class DBConnectionTester
 		while (!exit)
 		{
 			System.out.print("\nChoose from the following options: "
-					+ "\n1 \tShow Records" 
+					+ "\n1 \tShow all FAFile Records" 
 					+ "\n2 \tAdd a Record"
 					+ "\n3 \tDelete All Records"
 					+ "\n4 \tDelete a Record"
@@ -52,10 +52,12 @@ public class DBConnectionTester
 					+ "\n6 \tModify a Record" 
 					+ "\n7 \tInsert Test Data  (Don't do this twice without clearing the DB)"
 					+ "\n8 \tReturn FileRecords for a particular FAFile"
-					+ "\n9 \tAdd a FileRecord to FAFile ID = 3" 
-					+ "\n10 \tBack up FileAid to c:/FileAidBackups/yyyy-MM-dd/" 
-					+ "\n11 \tRestore a backup" 
-					+ "\n12 \tExit" 
+					+ "\n9 \tAdd a FileRecord to FAFile ID = 3"
+					+ "\n10 \tAdd a SummaryRecord"
+					+ "\n11 \tShow all SummaryRecord Records" 
+					+ "\n12 \tBack up FileAid to c:/FileAidBackups/yyyy-MM-dd/" 
+					+ "\n13 \tRestore a backup" 
+					+ "\n14 \tExit" 
 					+ "\nChoice: ");
 			int response = scan.nextInt();
 			switch (response)
@@ -164,6 +166,27 @@ public class DBConnectionTester
 				break;
 				
 			case 10:
+				SummaryRecord newSummaryRecord = createSummaryRecord();
+				dbConnection.insertSummaryRecord(newSummaryRecord);
+				break;
+
+			case 11:
+				ArrayList<SummaryRecord> summaryRecords= new ArrayList<>();
+				summaryRecords = dbConnection.getSummaryRecords();
+				if (summaryRecords == null)
+				{
+					System.out.println("\nThere are no SummaryRecord records.");
+				}
+				else
+				{
+					for (SummaryRecord sr : summaryRecords)
+					{
+						System.out.println("\n" + sr.toString());
+					}
+				}
+				break;
+
+			case 12:
 				try
 				{
 					dbConnection.backUpDatabase();
@@ -175,7 +198,7 @@ public class DBConnectionTester
 				}
 				break;
 
-			case 11:
+			case 13:
 				System.out.print("Enter the name of the backup directory: ");
 				String backupDirectory = scan.next();
 				success = dbConnection.restoreDatase(backupDirectory);
@@ -190,7 +213,7 @@ public class DBConnectionTester
 				}
 				break;
 
-			case 12:
+			case 14:
 				exit = true;
 				break;
 			default:
@@ -224,7 +247,15 @@ public class DBConnectionTester
 		FileRecord test7 = new FileRecord(3, "test3", "c:\\testfiles\\", 1,
 				"docx", sqlDate7);
 		return test7;
-	}	
+	}
+	
+	private static SummaryRecord createSummaryRecord()
+	{
+		GregorianCalendar date = new GregorianCalendar();
+		Timestamp sqlDate = new Timestamp(date.getTimeInMillis());
+		SummaryRecord newSummaryRecord = new SummaryRecord(sqlDate, 5, 10, 1, 1, 2);
+		return newSummaryRecord;
+	}
 
 
 	
