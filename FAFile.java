@@ -17,9 +17,10 @@ public class FAFile implements Comparable<FAFile> {
 	private int size = 0;
 	private String extension = "";
 	private Boolean active = true;
-	private String memo = "";
 	private Timestamp modDate;
 	private FileHistory history = new FileHistory();
+	private List<Memo> memos;
+	private List<String> links;
 	
 	public FAFile(){}
 	
@@ -122,13 +123,32 @@ public class FAFile implements Comparable<FAFile> {
 		return modDate;
 	}
 	
-	public String getMemo(){
-		return memo;
+	public void addMemo(String memoAdd) {
+		Memo add = new Memo(memoAdd);
+		memos.add(add);
 	}
 	
-	public void setMemo(String newMemo)
-	{
-		memo = newMemo;
+	//Added so the return to the driver/UI is cleaner.
+	//Calls toString from Memo.
+	//returns date on one line then
+	//escapes to the next line where the Memo text is displayed
+	public List<String> getMemosAsString(){
+		List<String> returnList = new ArrayList<>();
+		for(Memo m : memos) {
+			returnList.add(m.toString());
+		}
+	}
+	
+	public List<Memo> getMemos(){
+		return memos;
+	}
+	
+	public void addLink(String id) {
+		links.add(id);
+	}
+	
+	public List<String> getLinks(){
+		return links;
 	}
 	
 	public int compareTo(FAFile faFile)
@@ -143,7 +163,7 @@ public class FAFile implements Comparable<FAFile> {
 		}
 	}
 
-
+	//Needs 
 	public String toString()
 	{
 		String status = "Active";
