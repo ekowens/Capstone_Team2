@@ -132,6 +132,19 @@ public class FAFile implements Comparable<FAFile> {
 		return modDate;
 	}
 	
+	//TODO add a method that can return the history in a usable/printable format
+	
+	public FileHistory getHistory(){
+		return history;
+	}
+	
+	//Turns the current file items into a FileRecord and adds to history.
+	//This should probably only be access internally when a file is updated
+	public void addHistory(){
+		FileRecord toAdd = new FileRecord(id, name, path, size, extension, modDate);
+		history.add(toAdd);
+	}
+	
 	public void addMemo(String memoAdd) {
 		Memo add = new Memo(memoAdd);
 		memos.add(add);
@@ -141,11 +154,19 @@ public class FAFile implements Comparable<FAFile> {
 	//Calls toString from Memo.
 	//returns date on one line then
 	//escapes to the next line where the Memo text is displayed
+	//If memos is null, adds one string to the list that says "No Memos"
 	public List<String> getMemosAsString(){
 		List<String> returnList = new ArrayList<>();
-		for(Memo m : memos) {
-			returnList.add(m.toString());
+		if(memos.equals(null)) {
+			returnList.add("No Memos");
 		}
+		else {
+			for(Memo m : memos) {
+				returnList.add(m.toString());
+			}
+		}
+		
+		return returnList;
 	}
 	
 	public List<Memo> getMemos(){
