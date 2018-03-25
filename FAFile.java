@@ -32,6 +32,8 @@ public class FAFile implements Comparable<FAFile> {
 		size = newSize;
 		extension = newExtension;
 		modDate = newModDate;
+		memos = new ArrayList<>();
+		links = new ArrayList<>();
 	}
 	
 	public FAFile(int newID, String newName, String newPath, int newSize, 
@@ -43,6 +45,8 @@ public class FAFile implements Comparable<FAFile> {
 		extension = newExtension;
 		modDate = newModDate;
 		history = newHistory;
+		memos = new ArrayList<>();
+		links = new ArrayList<>();
 	}
 	
 	public FAFile(int newID, String newName, String newPath, int newSize, 
@@ -54,6 +58,8 @@ public class FAFile implements Comparable<FAFile> {
 		extension = newExtension;
 		memo = newMemo;
 		modDate = newModDate;
+		memos = new ArrayList<>();
+		links = new ArrayList<>();
 	}
 	
 	public FAFile(int newID, String newName, String newPath, int newSize, 
@@ -80,6 +86,8 @@ public class FAFile implements Comparable<FAFile> {
 		active = newActive;
 		memo = newMemo;
 		modDate = newModDate;
+		memos = new ArrayList<>();
+		links = new ArrayList<>();
 	}
 	
 	public boolean update(FAFile file){
@@ -90,7 +98,8 @@ public class FAFile implements Comparable<FAFile> {
 		size = file.getSize();
 		extension = file.getExtension();
 		active = file.isActive();
-		memo = file.getMemo();
+		memos = file.getMemos();
+		links = file.getLinks();
 		return true;
 	}
 		
