@@ -49,21 +49,24 @@ public class DBConnectionTester
 					+ "\n3 \tDelete All Records"
 					+ "\n4 \tDelete a Record"
 					+ "\n5 \tReturn Record with ID = 1"
-					+ "\n6 \tModify a Record" 
-					+ "\n7 \tInsert Test Data  (Don't do this twice without clearing the DB)"
-					+ "\n8 \tReturn FileRecords for a particular FAFile"
-					+ "\n9 \tAdd a FileRecord to FAFile ID = 3"
-					+ "\n10 \tAdd a SummaryRecord"
-					+ "\n11 \tShow all SummaryRecord Records" 
-					+ "\n12 \tBack up FileAid to c:/FileAidBackups/yyyy-MM-dd/" 
-					+ "\n13 \tRestore a backup" 
-					+ "\n14 \tExit" 
+					+ "\n6 \tInsert Test Data  (Don't do this twice without clearing the DB)"
+					+ "\n7 \tReturn FileRecords for a particular FAFile"
+					+ "\n8 \tAdd a FileRecord to FAFile ID = 2"
+					+ "\n9 \tAdd a SummaryRecord"
+					+ "\n10 \tShow all SummaryRecord Records" 
+					+ "\n11 \tAdd an ActionLog Record" 
+					+ "\n12 \tShow all ActionLog Records" 
+					+ "\n13 \tClear all ActionLog Records" 
+					+ "\n14 \tAdd a Memo to FAFile 1" 
+					+ "\n15 \tBack up FileAid to c:/FileAidBackups/yyyy-MM-dd/" 
+					+ "\n16 \tRestore a backup" 
+					+ "\n17 \tExit" 
 					+ "\nChoice: ");
 			int response = scan.nextInt();
 			switch (response)
 			{
 			case 1:
-				ArrayList<FAFile> allFAFiles = dbConnection.selectAllRecords();
+				ArrayList<FAFile> allFAFiles = dbConnection.getAllFAFileRecords();
 				if (allFAFiles == null)
 				{
 					System.out.println("No FAFile records in database");
@@ -112,33 +115,15 @@ public class DBConnectionTester
 					System.out.println("\n" + faFile.toString());
 				}
 				break;
+
 			case 6:
-				FAFile oldFAFile = dbConnection.findFAFile(2);
-				FAFile modifiedFAFile = modifyFile(oldFAFile);
-				success = dbConnection.upDateFAFile(modifiedFAFile);
-				if (success)
-				{
-					ArrayList<FAFile> allFAFiles2 = dbConnection
-							.selectAllRecords();
-					for (FAFile faFile2 : allFAFiles2)
-					{
-						System.out.println("\n" + faFile2.toString());
-					}
-				} // end if
-				else
-				{
-					System.out.println("FAFile not found");
-				}
-				break;
-				
-			case 7:
 				dbConnection.insertTestData();
 				break;
 
-			case 8:
+			case 7:
 				System.out.print("Enter a FAFile ID: ");
 				int faFileID = scan.nextInt();				
-				ArrayList<FileRecord> fileRecords = dbConnection.selectFileRecords(faFileID);
+				ArrayList<FileRecord> fileRecords = dbConnection.getFileRecords(faFileID);
 				if (fileRecords == null)
 				{
 					System.out.println("\nThis FAFile does not exist or has no FileRecords");
@@ -152,8 +137,8 @@ public class DBConnectionTester
 				}
 				break;
 
-			case 9:
-				FileRecord newFileRecord = createFileRecord();
+			case 8:
+				FileRecord newFileRecord = createFileRecord(2);
 				success = dbConnection.insertFileRecord(newFileRecord);
 				if (success)
 				{
@@ -165,12 +150,12 @@ public class DBConnectionTester
 				}
 				break;
 				
-			case 10:
+			case 9:
 				SummaryRecord newSummaryRecord = createSummaryRecord();
 				dbConnection.insertSummaryRecord(newSummaryRecord);
 				break;
 
-			case 11:
+			case 10:
 				ArrayList<SummaryRecord> summaryRecords= new ArrayList<>();
 				summaryRecords = dbConnection.getSummaryRecords();
 				if (summaryRecords == null)
@@ -186,7 +171,46 @@ public class DBConnectionTester
 				}
 				break;
 
+			case 11:
+				ActionLog newActionLog = createActionLogRecord();
+				dbConnection.insertActionLogItem(newActionLog);
+				break;
+
 			case 12:
+				ArrayList<ActionLog> actionLogRecords= new ArrayList<>();
+				actionLogRecords = dbConnection.getActionLogRecords();
+				if (actionLogRecords == null)
+				{
+					System.out.println("\nThere are no ActionLog records.");
+				}
+				else
+				{
+					for (ActionLog sr : actionLogRecords)
+					{
+						System.out.println(sr.toString());
+					}
+				}
+				break;
+
+			case 13:
+				dbConnection.clearActionLog();
+				break;
+				
+			case 14:
+				Memo memo = createMemo();
+				success = dbConnection.insertMemo(memo, 1);
+				if(success)
+				{
+					System.out.println("Memo Added");
+				}
+				else
+				{
+					System.out.println("No FAFile with ID=1 exists.");					
+				}
+				break;
+				
+
+			case 15:
 				try
 				{
 					dbConnection.backUpDatabase();
@@ -198,7 +222,7 @@ public class DBConnectionTester
 				}
 				break;
 
-			case 13:
+			case 16:
 				System.out.print("Enter the name of the backup directory: ");
 				String backupDirectory = scan.next();
 				success = dbConnection.restoreDatase(backupDirectory);
@@ -213,7 +237,7 @@ public class DBConnectionTester
 				}
 				break;
 
-			case 14:
+			case 17:
 				exit = true;
 				break;
 			default:
@@ -227,25 +251,22 @@ public class DBConnectionTester
 
 	private static FAFile createFile()
 	{
-		GregorianCalendar date1 = new GregorianCalendar(2018, 01, 19);
-		Timestamp sqlDate1 = new Timestamp(date1.getTimeInMillis());
-		FAFile test1 = new FAFile(4, "test4", "c:\\testfiles\\", 3, "docx",
-				sqlDate1);
+		FAFile test1 = new FAFile(4, "test4", "docx");
+		test1.addToHistory(createFileRecord(4));
 		return test1;
 	} // end createFile
 	
-	private static FAFile modifyFile(FAFile faFile)
+	/*private static FAFile modifyFile(FAFile faFile)
 	{
 		faFile.setMemo("This is the file that was modified");
 		return faFile;
-	}
+	}*/
 	
-	private static FileRecord createFileRecord()
+	private static FileRecord createFileRecord(int faFileID)
 	{
-		GregorianCalendar date7 = new GregorianCalendar(2018, 00, 20);
+		GregorianCalendar date7 = new GregorianCalendar();
 		Timestamp sqlDate7 = new Timestamp(date7.getTimeInMillis());
-		FileRecord test7 = new FileRecord(3, "test3", "c:\\testfiles\\", 1,
-				"docx", sqlDate7);
+		FileRecord test7 = new FileRecord(faFileID, "c:\\testfiles\\", 1, sqlDate7);
 		return test7;
 	}
 	
@@ -255,6 +276,21 @@ public class DBConnectionTester
 		Timestamp sqlDate = new Timestamp(date.getTimeInMillis());
 		SummaryRecord newSummaryRecord = new SummaryRecord(sqlDate, 5, 10, 1, 1, 2);
 		return newSummaryRecord;
+	}
+	
+	private static ActionLog createActionLogRecord()
+	{
+		GregorianCalendar date = new GregorianCalendar();
+		Timestamp sqlDate = new Timestamp(date.getTimeInMillis());
+		ActionLog al = new ActionLog(sqlDate, ActionLogType.ADD_FAFILE, 3);
+		return al;
+	}
+	
+	private static Memo createMemo()
+	{
+		String text = "This is a memo for file # 1.";
+		Memo memo = new Memo(text);
+		return memo;
 	}
 
 

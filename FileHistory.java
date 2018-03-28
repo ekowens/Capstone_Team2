@@ -23,4 +23,12 @@ public class FileHistory extends ArrayList<FileRecord> {
 		return true;
 	}
 
+	/**
+	 * @return the updateCount
+	 */
+	public int getUpdateCount()
+	{
+		return updateCount;
+	}
+
 }

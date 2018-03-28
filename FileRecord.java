@@ -11,32 +11,25 @@ public class FileRecord implements Comparable<FileRecord> {
 	
 	private static final FileRecord String = null;
 	private int faFileID = 0;
-	private String name = "";
 	private String path = "";
 	private int size = 0;
-	private String extension = "";
 	private Timestamp modDate;
 	
 	
-	public FileRecord(int newfaFileID, String Name, String newPath, int newSize, String newExtension, Timestamp newModDate){
-		
+	public FileRecord(int newfaFileID, String newPath, int newSize, Timestamp newModDate)
+	{	
 		faFileID = newfaFileID;
-		name = Name;
 		path = newPath;
 		size = newSize;
-		extension = newExtension;
-		modDate = newModDate;
-		
+		modDate = newModDate;		
 	}
 
 
-	public boolean update(FileRecord file){
+	public boolean update(FileRecord file)
+	{
 		//TODO add record when fileRecord is finished
-		
-		name = file.getName();
-		path = file.getPath();
+				path = file.getPath();
 		size = file.getSize();
-		extension = file.getExtension();
 		modDate = file.getModDate();
 		return true;
 	}
@@ -48,36 +41,26 @@ public class FileRecord implements Comparable<FileRecord> {
 			return String;
 		}
 	}
-	
-	
+		
 	private boolean isEmpty() {
 		// TODO Auto-generated method stub
 		return false;
 	}
-	
-	
+		
 	public String toString(){
-	    return name +"=="+path+"=="+size+"=="+ extension + "==" + modDate;
+	    return faFileID +"=="+path+"=="+size+"==" + modDate;
 	}
 			
 	public int getFAFileID(){
 		return faFileID;
 	}
 		
-	public String getName(){
-		return name;
-	}
-	
 	public String getPath(){
 		return path;
 	}
 	
 	public int getSize(){
 		return size;
-	}
-	
-	public String getExtension(){
-		return extension;
 	}
 	
 	public Timestamp getModDate(){

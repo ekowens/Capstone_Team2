@@ -1,5 +1,5 @@
-import java.text.DateFormat;
-import java.util.Date;
+import java.util.ArrayList;
+import java.util.List;
 import java.sql.*;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -13,91 +13,56 @@ public class FAFile implements Comparable<FAFile> {
 	
 	private int id = 0;
 	private String name = "";
-	private String path = "";
-	private int size = 0;
 	private String extension = "";
 	private Boolean active = true;
-	private Timestamp modDate;
 	private FileHistory history = new FileHistory();
 	private List<Memo> memos;
-	private List<String> links;
+	private List<Integer> links;
 	
 	public FAFile(){}
 	
-	public FAFile(int newID, String newName, String newPath, int newSize, 
-			String newExtension, Timestamp newModDate){
+	public FAFile(int newID, String newName, String newExtension)
+	{
 		id = newID;
 		name = newName;
-		path = newPath;
-		size = newSize;
 		extension = newExtension;
-		modDate = newModDate;
+		history = new FileHistory();
 		memos = new ArrayList<>();
 		links = new ArrayList<>();
 	}
 	
-	public FAFile(int newID, String newName, String newPath, int newSize, 
-			String newExtension, Timestamp newModDate, FileHistory newHistory){
+	public FAFile(int newID, String newName, String newExtension, FileHistory newHistory)
+	{
 		id = newID;
 		name = newName;
-		path = newPath;
-		size = newSize;
 		extension = newExtension;
-		modDate = newModDate;
 		history = newHistory;
 		memos = new ArrayList<>();
 		links = new ArrayList<>();
 	}
+			
 	
-	public FAFile(int newID, String newName, String newPath, int newSize, 
-			String newExtension, String newMemo, Timestamp newModDate){
+	// Constructor to be used for moving DB data into object
+	public FAFile(int newID, String newName, String newExtension, 
+			Boolean newActive, FileHistory newHistory, 
+			ArrayList<Memo> newMemos, ArrayList<Integer> newLinks)
+	{
 		id = newID;
 		name = newName;
-		path = newPath;
-		size = newSize;
-		extension = newExtension;
-		memo = newMemo;
-		modDate = newModDate;
-		memos = new ArrayList<>();
-		links = new ArrayList<>();
-	}
-	
-	public FAFile(int newID, String newName, String newPath, int newSize, 
-			String newExtension, String newMemo, Timestamp newModDate,
-			FileHistory newHistory){
-		id = newID;
-		name = newName;
-		path = newPath;
-		size = newSize;
-		extension = newExtension;
-		memo = newMemo;
-		modDate = newModDate;
-		history = newHistory;
-	}
-	
-	
-	public FAFile(int newID, String newName, String newPath, int newSize, 
-			String newExtension, Boolean newActive, String newMemo, Timestamp newModDate ){
-		id = newID;
-		name = newName;
-		path = newPath;
-		size = newSize;
 		extension = newExtension;
 		active = newActive;
-		memo = newMemo;
-		modDate = newModDate;
-		memos = new ArrayList<>();
-		links = new ArrayList<>();
+		history = newHistory;
+		memos = newMemos;
+		links = newLinks;
 	}
 	
 	public boolean update(FAFile file){
 		//TODO add record when fileRecord is finished
 		id = file.getID();
 		name = file.getName();
-		path = file.getPath();
-		size = file.getSize();
 		extension = file.getExtension();
 		active = file.isActive();
+		history = file.getHistory();
 		memos = file.getMemos();
 		links = file.getLinks();
 		return true;
@@ -111,13 +76,6 @@ public class FAFile implements Comparable<FAFile> {
 		return name;
 	}
 	
-	public String getPath(){
-		return path;
-	}
-	
-	public int getSize(){
-		return size;
-	}
 	
 	public String getExtension(){
 		return extension;
@@ -127,10 +85,6 @@ public class FAFile implements Comparable<FAFile> {
 		return active;
 	}
 	
-	public Timestamp getModDate()
-	{
-		return modDate;
-	}
 	
 	//TODO add a method that can return the history in a usable/printable format
 	
@@ -140,10 +94,16 @@ public class FAFile implements Comparable<FAFile> {
 	
 	//Turns the current file items into a FileRecord and adds to history.
 	//This should probably only be access internally when a file is updated
-	public void addHistory(){
+	/*public void addHistory(){
 		FileRecord toAdd = new FileRecord(id, name, path, size, extension, modDate);
 		history.add(toAdd);
+	}*/
+
+	public void addToHistory(FileRecord fileRecord)
+	{
+	history.addRecord(fileRecord);
 	}
+
 	
 	public void addMemo(String memoAdd) {
 		Memo add = new Memo(memoAdd);
@@ -173,17 +133,23 @@ public class FAFile implements Comparable<FAFile> {
 		return memos;
 	}
 	
-	public void addLink(String id) {
-		links.add(id);
+	public void addLink(Integer link) {
+		links.add(link);
 	}
 	
-	public List<String> getLinks(){
+	public List<Integer> getLinks(){
 		return links;
+	}
+	
+	public Timestamp getCurrentModDate()
+	{
+		Timestamp currentModDate = history.getRecord(0).getModDate();
+		return currentModDate;
 	}
 	
 	public int compareTo(FAFile faFile)
 	{
-		if (this.modDate.compareTo(faFile.modDate) >= 0)
+		if (this.getCurrentModDate().compareTo(faFile.getCurrentModDate()) >= 0)
 		{
 			return 1;
 		}
@@ -201,22 +167,34 @@ public class FAFile implements Comparable<FAFile> {
 			{
 			 status = "Inactive"; 
 			}
-		String fileString = "ID: " + id + " " + path + name + "." + extension + " Size: " + size + " " + status
-				+ " \nMod Date: " + modDate ;
-		
-		if (memo != "")
-		{
-			fileString = fileString + "\nMemo: " + memo;
-		}
+		String fileString = "ID: " + id + " " + name + "." + extension + " "+ status;
 		
 		if (history != null)
 		{
+			fileString = fileString + "\nFile History";
 			for( FileRecord fileRecord : history)
 			{
 				fileString = fileString + "\n" + fileRecord.toString();
 			}
 		}
+		
+		if (memos != null)
+		{
+			fileString = fileString + "\nMemos:";
+			for( Memo memo : memos)
+			{
+				fileString = fileString + "\n" + memo.toString();
+			}
+		}
+
+		if (links != null)
+		{
+			fileString = fileString + "\nLinks:";
+			for( Integer link : links)
+			{
+				fileString = fileString + "\n" + link.toString();
+			}
+		}
 		return fileString;
 	}
-
 }
