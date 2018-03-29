@@ -58,9 +58,10 @@ public class DBConnectionTester
 					+ "\n12 \tShow all ActionLog Records" 
 					+ "\n13 \tClear all ActionLog Records" 
 					+ "\n14 \tAdd a Memo to FAFile 1" 
-					+ "\n15 \tBack up FileAid to c:/FileAidBackups/yyyy-MM-dd/" 
-					+ "\n16 \tRestore a backup" 
-					+ "\n17 \tExit" 
+					+ "\n15 \tAdd a Link to FAFile ID = 2 in the FAFile ID = 1 record" 
+					+ "\n16 \tBack up FileAid to c:/FileAidBackups/yyyy-MM-dd/" 
+					+ "\n17 \tRestore a backup" 
+					+ "\n18 \tExit" 
 					+ "\nChoice: ");
 			int response = scan.nextInt();
 			switch (response)
@@ -209,8 +210,19 @@ public class DBConnectionTester
 				}
 				break;
 				
-
 			case 15:
+				success = dbConnection.insertLink(2, 1);
+				if(success)
+				{
+					System.out.println("Link added");
+				}
+				else
+				{
+					System.out.println("FAFile not found");
+				}
+				break;
+				
+			case 16:
 				try
 				{
 					dbConnection.backUpDatabase();
@@ -222,7 +234,7 @@ public class DBConnectionTester
 				}
 				break;
 
-			case 16:
+			case 17:
 				System.out.print("Enter the name of the backup directory: ");
 				String backupDirectory = scan.next();
 				success = dbConnection.restoreDatase(backupDirectory);
@@ -237,7 +249,7 @@ public class DBConnectionTester
 				}
 				break;
 
-			case 17:
+			case 18:
 				exit = true;
 				break;
 			default:
@@ -251,17 +263,19 @@ public class DBConnectionTester
 
 	private static FAFile createFile()
 	{
-		FAFile test1 = new FAFile(4, "test4", "docx");
-		test1.addToHistory(createFileRecord(4));
-		return test1;
+		FileRecord fileRecord = createFileRecord(4);
+		FileHistory history = new FileHistory();
+		history.addRecord(fileRecord);
+		ArrayList<Integer> links = new ArrayList<>();
+		links.add(2);
+		links.add(3);
+		Memo memo = new Memo("This is testfile # 4");
+		ArrayList<Memo> memos = new ArrayList<>();
+		memos.add(memo);
+		FAFile test4 = new FAFile(4, "test4", "docx", true, history, memos, links);
+		return test4;
 	} // end createFile
-	
-	/*private static FAFile modifyFile(FAFile faFile)
-	{
-		faFile.setMemo("This is the file that was modified");
-		return faFile;
-	}*/
-	
+		
 	private static FileRecord createFileRecord(int faFileID)
 	{
 		GregorianCalendar date7 = new GregorianCalendar();

@@ -206,6 +206,7 @@ public class DBConnection
 				System.out.println(" . . . . clearing FileAid Database");
 				statement.executeUpdate("DELETE FROM FILERECORD WHERE 1=1");
 				statement.executeUpdate("DELETE FROM MEMO WHERE 1=1");
+				statement.executeUpdate("DELETE FROM LINK WHERE 1=1");
 				statement.executeUpdate("DELETE FROM FAFILE WHERE 1=1");
 				//statement.executeUpdate("DELETE FROM SUMMARYRECORD WHERE 1=1");
 
@@ -232,12 +233,16 @@ public class DBConnection
 		{
 			String updateFileRecord = "DELETE FROM FILERECORD WHERE frfiID=" + ID;
 			String updateMemoRecord = "DELETE FROM MEMO WHERE mefiID=" + ID;
+			String updateLinkRecord = "DELETE FROM LINK WHERE lifiID=" + ID;
+			String updateLinkedRecord = "DELETE FROM LINK WHERE liLINKEDFILEID=" + ID;
 			String updateFAFile = "DELETE FROM FAFILE WHERE fiID=" + ID;
 			try
 			{
 				Statement statement = conn.createStatement();
 				statement.executeUpdate(updateFileRecord);
 				statement.executeUpdate(updateMemoRecord);
+				statement.executeUpdate(updateLinkRecord);
+				statement.executeUpdate(updateLinkedRecord);
 				statement.executeUpdate(updateFAFile);
 				statement.close();
 			}
@@ -338,6 +343,7 @@ public class DBConnection
 			{
 				String update = "DELETE FROM FILERECORD WHERE frfiID =" + ID;
 				update = "DELETE FROM MEMO WHERE mefiID=" + ID;
+				update = "DELETE FROM LINK WHERE lifiID=" + ID;
 				update = "DELETE FROM FAFILE WHERE fiID=" + ID;
 				try
 				{
@@ -395,6 +401,13 @@ public class DBConnection
 			{
 				insertMemo(memo, ID);
 			}
+
+			//Insert Link Records
+			for(Integer link : file.getLinks())
+			{
+				insertLink(link, ID);
+			}
+
 			
 			return true;
 		} // end if
