@@ -29,10 +29,25 @@ public class Memo
 		date = new Timestamp(System.currentTimeMillis());
 		memoText = text;
 	}
+		
+	/**
+	 * @return the date
+	 */
+	public Timestamp getDate()
+	{
+		return date;
+	}
+
+	/**
+	 * @return the memoText
+	 */
+	public String getMemoText()
+	{
+		return memoText;
+	}
 
 	public String toString()
 	{
 		return date.toString() + "\n" + memoText;
 	}
-
 }

@@ -149,16 +149,8 @@ public class FAFile implements Comparable<FAFile> {
 	
 	public int compareTo(FAFile faFile)
 	{
-		if (this.getCurrentModDate().compareTo(faFile.getCurrentModDate()) >= 0)
-		{
-			return 1;
-		}
-		else
-		{
-			return -1;
-		}
+		return this.name.compareTo(faFile.name);
 	}
-
 	//Needs 
 	public String toString()
 	{
