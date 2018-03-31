@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.Scanner;
 
@@ -257,7 +258,8 @@ public class DBConnection
 	}
 
 	
-		// Returns an ArrayList of all FAFile records in DB; returns null if there are none
+		// Returns an ArrayList of all FAFile records in DB sorted by file name; 
+		// returns null if there are none
 		public ArrayList<FAFile> getAllFAFileRecords()
 		{
 			ArrayList<FAFile> allFAFileRecords = new ArrayList<>();
@@ -295,10 +297,33 @@ public class DBConnection
 			{
 				sqlExcept.printStackTrace();
 			}
+			Collections.sort(allFAFileRecords);
 			return allFAFileRecords;
 		}// end selectAllRecords
-				
+
+		// Converts the ArrayList of all FAFile Records into an ArrayList of FAFileDisplay Records
+		// Intended to facilitate UI display of FAFile Record information as well as searching records
+		// Uses most recent FileRecord in FileHistory
+		public ArrayList<FAFileDisplay> getFAFileDisplayRecords()
+		{
+			ArrayList<FAFile> allFAFiles = this.getAllFAFileRecords();
+			ArrayList<FAFileDisplay> allFAFileDisplayRecords = new ArrayList<>();
+			
+			for(FAFile faFile : allFAFiles)
+			{
+				FAFileDisplay newFAFileDisplay = new FAFileDisplay(faFile.getID(),
+						faFile.getName(), faFile.getExtension(),
+						faFile.isActive(), faFile.getMemos(), faFile.getLinks(),
+						faFile.getHistory().get(0).getPath(), 
+						faFile.getHistory().get(0).getSize(),
+						faFile.getHistory().get(0).getModDate());
+				allFAFileDisplayRecords.add(newFAFileDisplay);
+			}
+			Collections.sort(allFAFileDisplayRecords);
+			return allFAFileDisplayRecords;		}
+		
 		// Select FileRecords for a particular FAFile, Returns null if FAFile does not exist or has no records
+		// Records are returned in ascending order by date
 		public FileHistory getFileRecords(int faFileID)
 		{
 			FileHistory fileRecords = new FileHistory();
@@ -330,6 +355,7 @@ public class DBConnection
 			{
 				sqlExcept.printStackTrace();
 			}
+			Collections.sort(fileRecords, Collections.reverseOrder());
 			return fileRecords;
 		}// end selectRecords
 		
@@ -364,6 +390,36 @@ public class DBConnection
 				return false;
 			}
 		}
+		
+		public boolean updateActive(int faFileID, boolean active)
+	{
+		if (this.findFAFile(faFileID) == null)
+		{
+			return false;
+		}
+		else
+		{
+			int activeStatus = 0;
+			if (active)
+			{
+				activeStatus = 1;
+			}
+			String update = "update FAFile set fiActive =" + activeStatus +
+					"where fiID=" + faFileID;
+			try
+			{
+				Statement statement = conn.createStatement();
+				statement.executeUpdate(update);
+				statement.close();
+			}
+			catch (SQLException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return true;
+		} // end else
+	}
 		
 	public boolean insertFile(FAFile file)
 	{
@@ -407,7 +463,6 @@ public class DBConnection
 			{
 				insertLink(link, ID);
 			}
-
 			
 			return true;
 		} // end if

@@ -69,14 +69,7 @@ public class FileRecord implements Comparable<FileRecord> {
 	
 	public int compareTo(FileRecord fileRecord)
 	{
-		if (this.modDate.compareTo(fileRecord.modDate) >= 0)
-		{
-			return 1;
-		}
-		else
-		{
-			return -1;
-		}
+		return this.modDate.compareTo(fileRecord.modDate);
 	}
 
 	}
