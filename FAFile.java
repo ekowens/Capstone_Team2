@@ -1,3 +1,5 @@
+package fileAid;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.sql.*;
@@ -14,6 +16,7 @@ public class FAFile implements Comparable<FAFile> {
 	private int id = 0;
 	private String name = "";
 	private String extension = "";
+	private String filePath = "";
 	private Boolean active = true;
 	private FileHistory history = new FileHistory();
 	private List<Memo> memos;
@@ -21,21 +24,23 @@ public class FAFile implements Comparable<FAFile> {
 	
 	public FAFile(){}
 	
-	public FAFile(int newID, String newName, String newExtension)
+	public FAFile(int newID, String newName, String newExtension, String newFilePath)
 	{
 		id = newID;
 		name = newName;
 		extension = newExtension;
+		filePath = newFilePath;
 		history = new FileHistory();
 		memos = new ArrayList<>();
 		links = new ArrayList<>();
 	}
 	
-	public FAFile(int newID, String newName, String newExtension, FileHistory newHistory)
+	public FAFile(int newID, String newName, String newExtension, String newFilePath, FileHistory newHistory)
 	{
 		id = newID;
 		name = newName;
 		extension = newExtension;
+		filePath = newFilePath;
 		history = newHistory;
 		memos = new ArrayList<>();
 		links = new ArrayList<>();
@@ -43,13 +48,14 @@ public class FAFile implements Comparable<FAFile> {
 			
 	
 	// Constructor to be used for moving DB data into object
-	public FAFile(int newID, String newName, String newExtension, 
+	public FAFile(int newID, String newName, String newExtension, String newFilePath, 
 			Boolean newActive, FileHistory newHistory, 
 			ArrayList<Memo> newMemos, ArrayList<Integer> newLinks)
 	{
 		id = newID;
 		name = newName;
 		extension = newExtension;
+		filePath = newFilePath;
 		active = newActive;
 		history = newHistory;
 		memos = newMemos;
@@ -61,6 +67,7 @@ public class FAFile implements Comparable<FAFile> {
 		id = file.getID();
 		name = file.getName();
 		extension = file.getExtension();
+		filePath = file.getPath();
 		active = file.isActive();
 		history = file.getHistory();
 		memos = file.getMemos();
@@ -79,6 +86,10 @@ public class FAFile implements Comparable<FAFile> {
 	
 	public String getExtension(){
 		return extension;
+	}
+	
+	public String getPath(){
+		return filePath;
 	}
 	
 	public Boolean isActive(){
