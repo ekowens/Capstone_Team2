@@ -60,9 +60,10 @@ public class DBConnectionTester
 					+ "\n14 \tClear all ActionLog Records" 
 					+ "\n15 \tAdd a Memo to FAFile 1" 
 					+ "\n16 \tAdd a Link to FAFile ID = 2 in the FAFile ID = 1 record" 
-					+ "\n17 \tBack up FileAid to c:/FileAidBackups/yyyy-MM-dd/" 
-					+ "\n18 \tRestore a backup" 
-					+ "\n19 \tExit" 
+					+ "\n17 \tToggle the Active field for FAFile ID = 1" 
+					+ "\n18 \tBack up FileAid to c:/FileAidBackups/yyyy-MM-dd/" 
+					+ "\n19 \tRestore a backup" 
+					+ "\n20 \tExit" 
 					+ "\nChoice: ");
 			int response = scan.nextInt();
 			switch (response)
@@ -238,6 +239,18 @@ public class DBConnectionTester
 				break;
 				
 			case 17:
+				boolean currentActiveStatus = dbConnection.getActive(1);
+				if (currentActiveStatus)
+				{
+					dbConnection.updateActive(1, false);
+				}
+				else
+				{
+					dbConnection.updateActive(1, true);
+				}
+				break;
+				
+			case 18:
 				try
 				{
 					dbConnection.backUpDatabase();
@@ -249,7 +262,7 @@ public class DBConnectionTester
 				}
 				break;
 
-			case 18:
+			case 19:
 				System.out.print("Enter the name of the backup directory: ");
 				String backupDirectory = scan.next();
 				success = dbConnection.restoreDatase(backupDirectory);
@@ -264,7 +277,7 @@ public class DBConnectionTester
 				}
 				break;
 
-			case 19:
+			case 20:
 				exit = true;
 				break;
 			default:

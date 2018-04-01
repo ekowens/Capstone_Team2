@@ -256,7 +256,6 @@ public class DBConnection
 		} // end if
 		return false;
 	}
-
 	
 		// Returns an ArrayList of all FAFile records in DB sorted by file name; 
 		// returns null if there are none
@@ -359,38 +358,8 @@ public class DBConnection
 			return fileRecords;
 		}// end selectRecords
 		
-		// Update an existing FAFile
-		// Takes updated FAFile object and substitutes it for the existing FAFile record
-		// Returns true if successful, false if FAFile does not exist.
-		public boolean upDateFAFile(FAFile faFile)
-		{
-			int ID = faFile.getID();
-			if(findFAFile(ID) != null)
-			{
-				String update = "DELETE FROM FILERECORD WHERE frfiID =" + ID;
-				update = "DELETE FROM MEMO WHERE mefiID=" + ID;
-				update = "DELETE FROM LINK WHERE lifiID=" + ID;
-				update = "DELETE FROM FAFILE WHERE fiID=" + ID;
-				try
-				{
-					Statement statement = conn.createStatement();
-					statement.executeUpdate(update);
-					statement.close();
-				}
-				catch (SQLException e)
-				{
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				insertFile(faFile);
-				return true;
-			}
-			else
-			{
-				return false;
-			}
-		}
-		
+		// Updates Active field for a particular record
+		// Returns true if successful, false if unable to locate faFile
 		public boolean updateActive(int faFileID, boolean active)
 	{
 		if (this.findFAFile(faFileID) == null)
@@ -419,6 +388,29 @@ public class DBConnection
 			}
 			return true;
 		} // end else
+	}
+		
+	public boolean getActive(int faFAFileID)
+	{
+		String query =	"select fiActive from FAFile where fiID="+ faFAFileID;
+		boolean status = true;
+		
+		try
+		{
+			Statement statement = conn.createStatement();
+			ResultSet results = statement.executeQuery(query);
+				while (results.next())
+				{
+					status = getActiveStatusDB(results.getInt(1));
+				} // end while
+				results.close();
+				statement.close();
+		}
+		catch (SQLException sqlExcept)
+		{
+			sqlExcept.printStackTrace();
+		}
+		return status;
 	}
 		
 	public boolean insertFile(FAFile file)
@@ -708,6 +700,24 @@ public class DBConnection
 		return memoRecords;
 	} // end getMemoRecords
 
+	// Deletes a memo given FAFile ID and date of memo
+	public void deleteMemo(int faFileID, Timestamp date)
+	{
+			String update = "DELETE FROM MEMO WHERE mefiID=" + faFileID +
+					" AND meDATE=" + date;
+			try
+			{
+				Statement statement = conn.createStatement();
+				statement.executeUpdate(update);
+				statement.close();
+			}
+			catch (SQLException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+	}
+	
 	// Inserts a Link, returns true if successful, false if FAFile not
 	// found
 	public boolean insertLink(Integer link, int faFileID)
@@ -770,6 +780,24 @@ public class DBConnection
 		}		
 		return linkRecords;
 	} // end getLinkRecords
+
+	// Deletes a link given FAFile ID and linked FAFile ID
+	public void deleteLink(int faFileID, int linkedFAFileID)
+	{
+			String update = "DELETE FROM MEMO WHERE lifiID=" + faFileID +
+					" AND liLINKEDFILEID=" + linkedFAFileID;
+			try
+			{
+				Statement statement = conn.createStatement();
+				statement.executeUpdate(update);
+				statement.close();
+			}
+			catch (SQLException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+	}
 
 	
 	// Back up FileAid to a directory named today's date in format yyyy-MM-dd
