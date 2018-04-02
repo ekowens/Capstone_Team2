@@ -1,3 +1,4 @@
+package fileAid;
 import java.sql.Timestamp;
 import java.util.List;
 
@@ -28,6 +29,7 @@ public class FAFileDisplay implements Comparable<FAFileDisplay>
 	private Boolean active = true;
 	private List<Memo> memos;
 	private List<Integer> links;
+	private List<Tickler> ticklers;
 	// FileRecord Instance Variables
 	private String path = "";
 	private int size = 0;
@@ -44,12 +46,13 @@ public class FAFileDisplay implements Comparable<FAFileDisplay>
 	 * @param active
 	 * @param memos
 	 * @param links
+	 * @param ticklers
 	 * @param path
 	 * @param size
 	 * @param modDate
 	 */
 	public FAFileDisplay(int id, String name, String extension, Boolean active,
-			List<Memo> memos, List<Integer> links,
+			List<Memo> memos, List<Integer> links, List<Tickler>ticklers,
 			String path, int size, Timestamp modDate)
 	{
 		this.id = id;
@@ -58,6 +61,7 @@ public class FAFileDisplay implements Comparable<FAFileDisplay>
 		this.active = active;
 		this.memos = memos;
 		this.links = links;
+		this.ticklers = ticklers;
 		this.path = path;
 		this.size = size;
 		this.modDate = modDate;
@@ -109,6 +113,14 @@ public class FAFileDisplay implements Comparable<FAFileDisplay>
 	public List<Integer> getLinks()
 	{
 		return links;
+	}
+
+	/**
+	 * @return the ticklers
+	 */
+	public List<Tickler> getTicklers()
+	{
+		return ticklers;
 	}
 
 	/**

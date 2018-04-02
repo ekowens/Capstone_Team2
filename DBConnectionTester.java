@@ -1,3 +1,4 @@
+package fileAid;
 
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -10,7 +11,7 @@ import java.util.Scanner;
 //  Section:  0001
 // 
 //  Project:  FileAidPilot
-//  File:     DBConnectionTester2.java
+//  File:     DBConnectionTester.java
 //  
 //  Name:     David Matthews
 //  Email:    dlmatthews1@my.waketech.edu
@@ -61,9 +62,11 @@ public class DBConnectionTester
 					+ "\n15 \tAdd a Memo to FAFile 1" 
 					+ "\n16 \tAdd a Link to FAFile ID = 2 in the FAFile ID = 1 record" 
 					+ "\n17 \tToggle the Active field for FAFile ID = 1" 
-					+ "\n18 \tBack up FileAid to c:/FileAidBackups/yyyy-MM-dd/" 
-					+ "\n19 \tRestore a backup" 
-					+ "\n20 \tExit" 
+					+ "\n18 \tReturn the next available FAFile ID" 
+					+ "\n19 \tReturn the password for the User user account" 
+					+ "\n20 \tBack up FileAid to c:/FileAidBackups/yyyy-MM-dd/" 
+					+ "\n21 \tRestore a backup" 
+					+ "\n22 \tExit" 
 					+ "\nChoice: ");
 			int response = scan.nextInt();
 			switch (response)
@@ -251,6 +254,14 @@ public class DBConnectionTester
 				break;
 				
 			case 18:
+				System.out.println("\nThe next available FAFile ID is: " + dbConnection.getNextFAFileID());
+				break;
+
+			case 19:
+				System.out.println("\nThe User password is: " + dbConnection.getPassword("User"));
+				break;
+
+			case 20:
 				try
 				{
 					dbConnection.backUpDatabase();
@@ -262,7 +273,7 @@ public class DBConnectionTester
 				}
 				break;
 
-			case 19:
+			case 21:
 				System.out.print("Enter the name of the backup directory: ");
 				String backupDirectory = scan.next();
 				success = dbConnection.restoreDatase(backupDirectory);
@@ -277,7 +288,7 @@ public class DBConnectionTester
 				}
 				break;
 
-			case 20:
+			case 22:
 				exit = true;
 				break;
 			default:
@@ -300,7 +311,14 @@ public class DBConnectionTester
 		Memo memo = new Memo("This is testfile # 4");
 		ArrayList<Memo> memos = new ArrayList<>();
 		memos.add(memo);
-		FAFile test4 = new FAFile(4, "test4", "docx", true, history, memos, links);
+		Tickler tickler = createTickler(4);
+		ArrayList<Tickler> ticklers = new ArrayList<>();
+		ticklers.add(tickler);
+		for (Tickler ticklerItem : ticklers)
+		{
+			System.out.println(ticklerItem.toString());
+		}
+		FAFile test4 = new FAFile(4, "test4", "docx", true, history, memos, links, ticklers);
 		return test4;
 	} // end createFile
 		
@@ -335,6 +353,13 @@ public class DBConnectionTester
 		return memo;
 	}
 
-
-	
+	private static Tickler createTickler(int faFileID)
+	{
+		String text = "This is a tickler for file # 4.";
+	    GregorianCalendar date = new GregorianCalendar(2018, 8, 20);
+	    Timestamp sqlDate = new Timestamp(date.getTimeInMillis());
+		Tickler tickler = new Tickler(faFileID, sqlDate, text);
+		System.out.println("New Tickler Created");
+		return tickler;
+	}	
 }

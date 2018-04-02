@@ -21,8 +21,20 @@ public class FAFile implements Comparable<FAFile> {
 	private FileHistory history = new FileHistory();
 	private List<Memo> memos;
 	private List<Integer> links;
+	private List<Tickler> ticklers;
 	
 	public FAFile(){}
+	
+	// **Constructor to be used only for inserting experimental data - remove before finalizing program
+	public FAFile(int newID, String newName, String newExtension)
+	{
+		id = newID;
+		name = newName;
+		extension = newExtension;
+		history = new FileHistory();
+		memos = new ArrayList<>();
+		links = new ArrayList<>();
+	}
 	
 	public FAFile(int newID, String newName, String newExtension, String newFilePath)
 	{
@@ -45,9 +57,8 @@ public class FAFile implements Comparable<FAFile> {
 		memos = new ArrayList<>();
 		links = new ArrayList<>();
 	}
-			
-	
-	// Constructor to be used for moving DB data into object
+				
+	// Constructor
 	public FAFile(int newID, String newName, String newExtension, String newFilePath, 
 			Boolean newActive, FileHistory newHistory, 
 			ArrayList<Memo> newMemos, ArrayList<Integer> newLinks)
@@ -62,6 +73,23 @@ public class FAFile implements Comparable<FAFile> {
 		links = newLinks;
 	}
 	
+	// Constructor to be used for moving DB data into FAFile class objects
+	// **Please don't modify this constructor without talking with David
+	public FAFile(int newID, String newName, String newExtension, 
+			Boolean newActive, FileHistory newHistory, 
+			ArrayList<Memo> newMemos, ArrayList<Integer> newLinks, 
+			ArrayList<Tickler> newTicklers)
+	{
+		id = newID;
+		name = newName;
+		extension = newExtension;
+		active = newActive;
+		history = newHistory;
+		memos = newMemos;
+		links = newLinks;
+		ticklers = newTicklers;
+	}
+	
 	public boolean update(FAFile file){
 		//TODO add record when fileRecord is finished
 		id = file.getID();
@@ -72,6 +100,7 @@ public class FAFile implements Comparable<FAFile> {
 		history = file.getHistory();
 		memos = file.getMemos();
 		links = file.getLinks();
+		ticklers = file.getTicklers();
 		return true;
 	}
 		
@@ -151,7 +180,15 @@ public class FAFile implements Comparable<FAFile> {
 	public List<Integer> getLinks(){
 		return links;
 	}
+
+	public void addTickler(Tickler tickler) {
+		ticklers.add(tickler);
+	}
 	
+	public List<Tickler> getTicklers(){
+		return ticklers;
+	}
+
 	public Timestamp getCurrentModDate()
 	{
 		Timestamp currentModDate = history.getRecord(0).getModDate();
@@ -198,6 +235,17 @@ public class FAFile implements Comparable<FAFile> {
 				fileString = fileString + "\n" + link.toString();
 			}
 		}
+		
+		if (ticklers != null)
+		{
+			fileString = fileString + "\nTicklers:";
+			for( Tickler tickler : ticklers)
+			{
+				fileString = fileString + "\n" + tickler.toString();
+			}
+		}
+
+		
 		return fileString;
 	}
 }

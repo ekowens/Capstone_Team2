@@ -1,3 +1,4 @@
+package fileAid;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.sql.CallableStatement;
@@ -208,6 +209,7 @@ public class DBConnection
 				statement.executeUpdate("DELETE FROM FILERECORD WHERE 1=1");
 				statement.executeUpdate("DELETE FROM MEMO WHERE 1=1");
 				statement.executeUpdate("DELETE FROM LINK WHERE 1=1");
+				statement.executeUpdate("DELETE FROM TICKLER WHERE 1=1");
 				statement.executeUpdate("DELETE FROM FAFILE WHERE 1=1");
 				//statement.executeUpdate("DELETE FROM SUMMARYRECORD WHERE 1=1");
 
@@ -236,6 +238,7 @@ public class DBConnection
 			String updateMemoRecord = "DELETE FROM MEMO WHERE mefiID=" + ID;
 			String updateLinkRecord = "DELETE FROM LINK WHERE lifiID=" + ID;
 			String updateLinkedRecord = "DELETE FROM LINK WHERE liLINKEDFILEID=" + ID;
+			String updateTicklerRecord = "DELETE FROM TICKLER WHERE tifiID=" + ID;			
 			String updateFAFile = "DELETE FROM FAFILE WHERE fiID=" + ID;
 			try
 			{
@@ -244,6 +247,7 @@ public class DBConnection
 				statement.executeUpdate(updateMemoRecord);
 				statement.executeUpdate(updateLinkRecord);
 				statement.executeUpdate(updateLinkedRecord);
+				statement.executeUpdate(updateTicklerRecord);
 				statement.executeUpdate(updateFAFile);
 				statement.close();
 			}
@@ -282,10 +286,12 @@ public class DBConnection
 					    FileHistory fileHistory = getFileRecords(results.getInt(1));
 					    ArrayList<Memo> memos = getMemoRecords(results.getInt(1));
 					    ArrayList<Integer> links = getLinkRecords(results.getInt(1));
+					    ArrayList<Tickler> ticklers = getTicklerRecords(results.getInt(1));
 
 						FAFile newFAFile = new FAFile(results.getInt(1),
 								results.getString(2), results.getString(3),
-								getActiveStatusDB(results.getInt(4)), fileHistory, memos, links);
+								convertBooleanDB(results.getInt(4)), fileHistory, 
+								memos, links, ticklers);
 						allFAFileRecords.add(newFAFile);
 					} // end while
 					results.close();
@@ -313,7 +319,7 @@ public class DBConnection
 				FAFileDisplay newFAFileDisplay = new FAFileDisplay(faFile.getID(),
 						faFile.getName(), faFile.getExtension(),
 						faFile.isActive(), faFile.getMemos(), faFile.getLinks(),
-						faFile.getHistory().get(0).getPath(), 
+						faFile.getTicklers(), faFile.getHistory().get(0).getPath(), 
 						faFile.getHistory().get(0).getSize(),
 						faFile.getHistory().get(0).getModDate());
 				allFAFileDisplayRecords.add(newFAFileDisplay);
@@ -401,7 +407,7 @@ public class DBConnection
 			ResultSet results = statement.executeQuery(query);
 				while (results.next())
 				{
-					status = getActiveStatusDB(results.getInt(1));
+					status = convertBooleanDB(results.getInt(1));
 				} // end while
 				results.close();
 				statement.close();
@@ -423,7 +429,7 @@ public class DBConnection
 					"INSERT INTO FAFILE (fiID, fiNAME, fiEXTENSION, fiACTIVE) "
 							+ "VALUES(%d, '%s', '%s', %d)",
 					file.getID(), file.getName(),file.getExtension(),
-					getActiveStatusObject(file.isActive()));
+					convertBooleanObject(file.isActive()));
 			// todo insert memos, links
 			Statement statement = null;
 			try
@@ -455,7 +461,12 @@ public class DBConnection
 			{
 				insertLink(link, ID);
 			}
-			
+
+			//Insert Tickler Records
+			for(Tickler tickler : file.getTicklers())
+			{
+				insertTickler(tickler, ID);
+			}			
 			return true;
 		} // end if
 		else
@@ -797,8 +808,92 @@ public class DBConnection
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-	}
+	} // end deleteLink
 
+	// Inserts a Tickler, returns true if successful, false if FAFile not
+	// found
+	public boolean insertTickler(Tickler tickler, int faFileID)
+	{
+		String update = String.format(
+				"INSERT INTO TICKLER (tifiID, tiDATE, tiACTION, tiRESOLVED) "
+						+ "VALUES(%d, '%s', '%s', %d)",
+						faFileID, tickler.getDate(), tickler.getAction(), 
+						convertBooleanObject(tickler.isResolved()));
+		Statement statement = null;
+
+		if (findFAFile(faFileID) == null)
+		{
+			return false;
+		}
+		else
+		{
+			try
+			{
+				statement = conn.createStatement();
+				statement.execute(update);
+				statement.close();
+			}
+			catch (SQLException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			System.out.println("Table Tickler Updated with new record.");
+			return true;
+		}
+	}// end insertTickler
+
+	// Returns Tickler records; return null if there are none
+	public ArrayList<Tickler> getTicklerRecords(int FAFileID)
+	{
+		ArrayList<Tickler> ticklerRecords = new ArrayList<>();
+		String query = "select * from TICKLER where tifiID = " + FAFileID;
+		try
+		{
+			Statement statement = conn.createStatement();
+			ResultSet results = statement.executeQuery(query);
+			int numRows = DBConnection.getNumTableRows(conn, "TICKLER");
+
+			if (numRows == 0)
+			{
+				return null;
+			}
+			else
+			{
+				while (results.next())
+				{
+					Tickler tickler = new Tickler(results.getInt(2), results.getTimestamp(3),
+							results.getString(4), convertBooleanDB(results.getInt(5)));
+					ticklerRecords.add(tickler);
+				} // end while
+				results.close();
+				statement.close();
+			}
+		}
+		catch (SQLException sqlExcept)
+		{
+			sqlExcept.printStackTrace();
+		}		
+		return ticklerRecords;
+	} // end getTicklerRecords
+
+	// Deletes a Tickler given FAFile ID and date of memo
+	public void deleteTickler(int faFileID, Timestamp date)
+	{
+			String update = "DELETE FROM TICKLER WHERE tifiID=" + faFileID +
+					" AND tiDATE=" + date;
+			try
+			{
+				Statement statement = conn.createStatement();
+				statement.executeUpdate(update);
+				statement.close();
+			}
+			catch (SQLException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+	}
 	
 	// Back up FileAid to a directory named today's date in format yyyy-MM-dd
 	// Method directly from Derby Documentation
@@ -868,6 +963,63 @@ public class DBConnection
 		return true;
 		}// end else
 	} // end restoreDatabase
+	
+	// Returns a password for the specified user; returns null if user does not
+	// exist
+	public String getPassword(String user)
+	{
+		String password = "";
+		String query = "select usPassword from FA_USER where usName='" + user + "'";
+		try
+		{
+			Statement statement = conn.createStatement();
+			ResultSet results = statement.executeQuery(query);
+
+			if (results == null)
+			{
+				return null;
+			}
+			else
+			{
+				while(results.next())
+				{
+				password = results.getString(1);
+				}
+				results.close();
+				statement.close();
+			}
+		}
+		catch (SQLException sqlExcept)
+		{
+			sqlExcept.printStackTrace();
+		}
+		return password;
+	}// end getPassword
+	
+	// Returns a password for the specified user; returns null if user does not
+	// exist
+	public int getNextFAFileID()
+	{
+		int nextID = 0;
+		String query = "select fiID from FAFILE";
+		try
+		{
+			Statement statement = conn.createStatement();
+			ResultSet results = statement.executeQuery(query);
+
+				while(results.next())
+				{
+				nextID = results.getInt(1);
+				}
+				results.close();
+				statement.close();
+		}
+		catch (SQLException sqlExcept)
+		{
+			sqlExcept.printStackTrace();
+		}
+		return ++nextID;
+	}// end getPassword
 
 //////////////////DBConnection Internal Helper Methods//////////////////////////////////////////
 
@@ -909,10 +1061,12 @@ public class DBConnection
 			    FileHistory fileHistory = getFileRecords(results.getInt(1));
 			    ArrayList<Memo> memos = getMemoRecords(results.getInt(1));
 			    ArrayList<Integer> links = getLinkRecords(results.getInt(1));
+			    ArrayList<Tickler> ticklers = getTicklerRecords(results.getInt(1));
 
 				faFile = new FAFile(results.getInt(1),
 						results.getString(2), results.getString(3),
-						getActiveStatusDB(results.getInt(4)), fileHistory, memos, links);
+						convertBooleanDB(results.getInt(4)), fileHistory, 
+						memos, links, ticklers);
 			} // end while
 			results.close();
 			statement.close();
@@ -964,10 +1118,11 @@ public class DBConnection
 			return charBuffer;
 		} // end readAFile
 		
+
 		// Convert Boolean Active to SmallInt for SQL table
-		private static int getActiveStatusObject(boolean active)
+		private static int convertBooleanObject(boolean bool)
 		{
-			if (active)
+			if (bool)
 			{
 				return 1;
 			}
@@ -975,12 +1130,12 @@ public class DBConnection
 			{
 				return 0;
 			}
-		}//end getActiveStatusObject
+		}//end convertBooleanObject
 
 		// Convert Boolean Active to SmallInt for SQL table
-		private static boolean getActiveStatusDB(int active)
+		private static boolean convertBooleanDB(int bool)
 		{
-			if (active == 1)
+			if (bool == 1)
 			{
 				return true;
 			}
@@ -988,7 +1143,7 @@ public class DBConnection
 			{
 				return false;
 			}
-		}//end getActiveStatusObject
+		}//end convertBooleanDB
 
 		// Inserts data for testing purposes
 		public void insertTestData()
@@ -1021,21 +1176,21 @@ public class DBConnection
 						"INSERT INTO FAFILE (fiID, fiNAME, fiEXTENSION, fiACTIVE) "
 								+ "VALUES(%d, '%s', '%s', %d)",
 						Test1.getID(), Test1.getName(), Test1.getExtension(),
-						getActiveStatusObject(Test1.isActive()));
+						convertBooleanObject(Test1.isActive()));
 				statement.executeUpdate(update);
 
 				update = String.format(
 						"INSERT INTO FAFILE (fiID, fiNAME, fiEXTENSION, fiACTIVE) "
 								+ "VALUES(%d, '%s', '%s', %d)",
 						Test2.getID(), Test2.getName(), Test2.getExtension(),
-						getActiveStatusObject(Test2.isActive()));
+						convertBooleanObject(Test2.isActive()));
 				statement.executeUpdate(update);
 
 				update = String.format(
 						"INSERT INTO FAFILE (fiID, fiNAME, fiEXTENSION, fiACTIVE) "
 								+ "VALUES(%d, '%s', '%s', %d)",
 						Test3.getID(), Test3.getName(), Test3.getExtension(),
-						getActiveStatusObject(Test3.isActive()));
+						convertBooleanObject(Test3.isActive()));
 				statement.executeUpdate(update);
 				
 				// Create Test Data for FILERECORD
@@ -1076,9 +1231,7 @@ public class DBConnection
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-
 		}
-
 } // end class
 
 
