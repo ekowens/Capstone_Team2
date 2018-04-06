@@ -37,9 +37,8 @@ CREATE TABLE LINK (
 CREATE TABLE FA_USER (
     usID INT CONSTRAINT FA_USER_PK PRIMARY KEY,
     usName CHAR(25) NOT NULL,
-    usPassword CHAR(16) NOT NULL,
-    usFirstLogin SMALLINT NOT NULL,
-    usConsecFailedLogin SMALLINT NOT NULL
+    usFirstLogin SMALLINT NOT NULL DEFAULT 0,
+    usLockOut TIMESTAMP
 );
 
 CREATE TABLE LOGIN (
@@ -77,7 +76,31 @@ CREATE TABLE TICKLER (
     tiResolved SMALLINT NOT NULL,
    	CONSTRAINT tifiID_fk FOREIGN KEY (tifiID) REFERENCES FAFILE(fiID)
 );
+    
+CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY(
+    'derby.connection.requireAuthentication',
+    'true');    
 
-INSERT INTO FA_USER(usID, usName, usPassword, usFirstLogin, usConsecFailedLogin) values(1, 'Admin', 'Ad123', 0, 0);
-INSERT INTO FA_USER(usID, usName, usPassword, usFirstLogin, usConsecFailedLogin) values(2, 'User', 'Us123', 0, 0);	
-INSERT INTO FA_USER(usID, usName, usPassword, usFirstLogin, usConsecFailedLogin) values(3, 'Guest', 'Gu123', 0, 0)
+CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY(
+    'derby.authentication.provider',
+    'BUILTIN');
+
+CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY(
+    'derby.user.superadmin',
+    'Sa123');
+
+CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY(
+    'derby.user.admin',
+    'Ad123');
+
+CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY(
+    'derby.user.user',
+    'Us123');
+
+CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY(
+    'derby.user.guest',
+    'Gu123');
+
+INSERT INTO FA_USER(usID, usName) values(1, 'Admin');
+INSERT INTO FA_USER(usID, usName) values(2, 'User');	
+INSERT INTO FA_USER(usID, usName) values(3, 'Guest')

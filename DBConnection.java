@@ -38,11 +38,19 @@ public class DBConnection
 	private String dbName = "FileAidDB";
 	// define the Derby connection URL to use
 	private String connectionURL = "jdbc:derby:C:/FileAid/" + dbName + ";create=true";
+	private String userName;
+	private String password;
+	private String userNamePasswordURL;
 	private Connection conn = null;
 	
 	public DBConnection()
+	{}
+	
+	public DBConnection(String newUserName, String newPassword)
 	{
-		
+		userName = newUserName;
+		password = newPassword;
+		userNamePasswordURL = ";user=" + userName + ";password=" + password;
 	}
 
 //////////////////DB Creation, Connection, and Shutdown Utilities////////////////////////
@@ -83,17 +91,12 @@ public class DBConnection
 
 			// Create Database
 			// Create a statement to issue simple commands.
-			// Call utility method to check if FAFile table exists.
-			// Create the DB if needed
-			if (!DBConnection.wwdChk4Table(conn))
-			{
 				System.out.println(" . . . . creating FileAid Database");
 				for (String createString : createStrings)
 					{
 					//System.out.println(createString);
 					statement.execute(createString);
 					}
-			}
 			
 			// Release the resources (clean up )
 			statement.close();
@@ -148,34 +151,65 @@ public class DBConnection
 		System.out.println("\nFileAid Installed.");
 	}
 	
-	//Checks for existence of DB, creates it if necessary, and establishes connection
-	   public void createConnection()
+	// Checks for existence of DB, creates it if necessary, and establishes
+	// connection
+	public String createConnection()
+	{
+		String status = "";
+		File directory = new File("c:/FileAid/" + dbName);
+		if (!directory.exists())
 		{
-			File directory = new File("c:/FileAid/" + dbName);
-			if (!directory.exists())
-			{
-				System.out.println("FileAid has not been installed.");
-				System.out.println("...Creating Database");
-				createDB();
-			}
+			System.out.println("FileAid has not been installed.");
+			System.out.println("...Creating Database");
+			createDB();
+		}
+		try
+		{
+			Class.forName(driver).newInstance();
+		}
+		catch (java.lang.ClassNotFoundException | InstantiationException | IllegalAccessException e)
+		{
+			e.printStackTrace();
+		}
+		boolean success = true;
+		try
+		{
+			conn = DriverManager
+					.getConnection(connectionURL + userNamePasswordURL);
+		}
+		catch (Exception except)
+		{
+			//except.printStackTrace();
+			success = false;
+		}
+		if (success)
+		{
 			try
 			{
-				Class.forName("org.apache.derby.jdbc.EmbeddedDriver").newInstance();
-				// Get a connection
-				conn = DriverManager.getConnection(connectionURL);
+				Statement statement = conn.createStatement();
+				// Set the SCHEMA to the default "APP" for everyone
+				statement.execute("SET SCHEMA APP");
 
-				if (wwdChk4Table(conn))
-				{
-					int numRows = DBConnection.getNumTableRows(conn, "FAFILE");
-					System.out.println("Database Exists with "
-							+ numRows + " file records.");
-				} // end if
+				int numRows = DBConnection.getNumTableRows(conn, "FAFILE");
+				System.out.println(
+						"Database Exists with " + numRows + " file records.");
 			}
 			catch (Exception except)
 			{
 				except.printStackTrace();
+				success = false;
 			}
-		}// end createConnection
+		} // end if
+		if(success == true)
+		{
+			status = "LOGGED_IN";
+		}
+		else
+		{
+			status = "INCORRECT_PASSWORD";
+		}
+		return status;
+	}// end createConnection
 
 		// Shutdown the database
 	   public void shutdown()
@@ -184,7 +218,7 @@ public class DBConnection
 			{
 				if (conn != null)
 				{
-					DriverManager.getConnection(connectionURL + ";shutdown=true");
+					DriverManager.getConnection(connectionURL + ";shutdown=true" + userNamePasswordURL);
 					conn.close();
 				}
 			}
@@ -927,7 +961,8 @@ public class DBConnection
 		{
 		
 		shutdown();
-		String restoreConnectionURL = "jdbc:derby:C:/FileAid/" + dbName + "; restoreFrom=" + backupDirectory;
+		String restoreConnectionURL = "jdbc:derby:C:/FileAid/" + dbName + "; restoreFrom=" + 
+		backupDirectory + userNamePasswordURL;
 		try
 		{
 			Class.forName("org.apache.derby.jdbc.EmbeddedDriver").newInstance();
@@ -1020,31 +1055,32 @@ public class DBConnection
 		}
 		return ++nextID;
 	}// end getPassword
+	
+	public boolean updatePassword(String user, String newPassword)
+	{
+		if (userName.equals("admin") | userName.equals(user))
+		{
+		try
+		{
+			Statement s = conn.createStatement();
+			s.executeUpdate("CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY("
+					+ "    'derby.user." + user + "', '" + newPassword + "')");
+		}
+		catch (SQLException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return true;
+		} // end if
+		else
+		{
+			return false;
+		}
+	}
 
 //////////////////DBConnection Internal Helper Methods//////////////////////////////////////////
 
-	/***      Check for  FILE table    ****/
-	   private static boolean wwdChk4Table (Connection conTst ) throws SQLException {
-	      try {
-	         Statement s = conTst.createStatement();
-	         s.execute("update FAFILE set fiID = 999, fiEXTENSION = '.DOCX',"
-	         		+ " fiACTIVE = 1 where 1=3");
-	      }  catch (SQLException sqle) {
-	         String theError = (sqle).getSQLState();
-	         /** If table exists will get -  WARNING 02000: No row was found **/
-	         if (theError.equals("42X05"))   // Table does not exist
-	         {  return false;
-	          }  else if (theError.equals("42X14") || theError.equals("42821"))  {
-	             System.out.println("WwdChk4Table: Incorrect table definition. Drop table FILE and rerun this program");
-	             throw sqle;   
-	          } else { 
-	             System.out.println("WwdChk4Table: Unhandled SQLException" );
-	             throw sqle; 
-	          }
-	      }
-	      return true;
-	   }  /*** END wwdInitTable  **/
-	   
 
 	
 	// Return a specific FAFile object given its ID, returns null if ID does not exist

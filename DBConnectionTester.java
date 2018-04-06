@@ -35,12 +35,30 @@ public class DBConnectionTester
 	 */
 	public static void main(String[] args)
 	{
-		DBConnection dbConnection = new DBConnection();
-		dbConnection.createConnection();
-		
-		System.out.println("\nWelcome to FileAid");
-
+		DBConnection dbConnection = null;
 		Scanner scan = new Scanner(System.in);
+		boolean success = false;
+		System.out.println("\nWelcome to FileAid");
+		while (!success)
+		{
+			System.out.print("\nPlease enter your username: ");
+			String userName = scan.next();
+			System.out.print("\nPlease enter your password: ");
+			String password = scan.next();
+			dbConnection = new DBConnection(userName, password);
+			String status = dbConnection.createConnection();
+			//System.out.println(status);
+			if (status.equals("INCORRECT_PASSWORD"))
+			{
+				System.out.println(
+						"\nIncorrect username or password, please try again.");
+			}
+			else
+			{
+				success = true;
+			}
+		}		
+		
 		boolean exit = false;
 		while (!exit)
 		{
@@ -63,7 +81,7 @@ public class DBConnectionTester
 					+ "\n16 \tAdd a Link to FAFile ID = 2 in the FAFile ID = 1 record" 
 					+ "\n17 \tToggle the Active field for FAFile ID = 1" 
 					+ "\n18 \tReturn the next available FAFile ID" 
-					+ "\n19 \tReturn the password for the User user account" 
+					+ "\n19 \tChange the password for \"user\" account" 
 					+ "\n20 \tBack up FileAid to c:/FileAidBackups/yyyy-MM-dd/" 
 					+ "\n21 \tRestore a backup" 
 					+ "\n22 \tExit" 
@@ -101,7 +119,7 @@ public class DBConnectionTester
 				break;
 			case 3:
 				FAFile newFile = createFile();
-				boolean success = dbConnection.insertFile(newFile);
+				success = dbConnection.insertFile(newFile);
 				if (success)
 				{
 					System.out.println("\nNew FAFile successfully added.");
@@ -258,7 +276,15 @@ public class DBConnectionTester
 				break;
 
 			case 19:
-				System.out.println("\nThe User password is: " + dbConnection.getPassword("User"));
+				success = dbConnection.updatePassword("user", "shazam");
+				if(success)
+				{
+					System.out.println("Password updated to \"shazam\".");
+				}
+				else
+				{
+					System.out.println("You don't have the authority to do that.");
+				}
 				break;
 
 			case 20:

@@ -9,7 +9,7 @@ import java.sql.*;
 //  Section:  0001
 // 
 //  Project:  FileAid
-//  File:     File.java
+//  File:     FAFile.java
 ////////////////////////////////////////////////////////////////////////////////
 public class FAFile implements Comparable<FAFile> {
 	
