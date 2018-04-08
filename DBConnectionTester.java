@@ -47,13 +47,27 @@ public class DBConnectionTester
 			String password = scan.next();
 			dbConnection = new DBConnection(userName, password);
 			String status = dbConnection.createConnection();
-			//System.out.println(status);
+			System.out.println(status);
 			if (status.equals("INCORRECT_PASSWORD"))
 			{
 				System.out.println(
 						"\nIncorrect username or password, please try again.");
 			}
 			else
+				if(status.equals("LOCKED_OUT"))
+				{
+					System.out.println(
+							"\nYou are locked out of the program.");
+					System.exit(0);
+				}
+				else
+					if(status.equals("LOGGED_IN_FIRST_LOGIN"))
+					{
+						System.out.println(
+								"\nYou must change your password.");
+						success = true;
+					}
+					else
 			{
 				success = true;
 			}
@@ -82,9 +96,11 @@ public class DBConnectionTester
 					+ "\n17 \tToggle the Active field for FAFile ID = 1" 
 					+ "\n18 \tReturn the next available FAFile ID" 
 					+ "\n19 \tChange the password for \"user\" account" 
-					+ "\n20 \tBack up FileAid to c:/FileAidBackups/yyyy-MM-dd/" 
-					+ "\n21 \tRestore a backup" 
-					+ "\n22 \tExit" 
+					+ "\n20 \tShow all Logins" 
+					+ "\n21 \tUnlock a locked user account" 
+					+ "\n22 \tBack up FileAid to c:/FileAidBackups/yyyy-MM-dd/" 
+					+ "\n23 \tRestore a backup" 
+					+ "\n24 \tExit" 
 					+ "\nChoice: ");
 			int response = scan.nextInt();
 			switch (response)
@@ -288,6 +304,28 @@ public class DBConnectionTester
 				break;
 
 			case 20:
+				ArrayList<Login> allLogins = dbConnection.getAllLogins();
+				for ( Login login : allLogins)
+				{
+					System.out.println(login.toString());
+				}
+				break;
+
+			case 21:
+				System.out.print("\nPlease enter the username of the account to unlock: ");
+				String lockedAccountuserName = scan.next();
+				success = dbConnection.unlockAccount(lockedAccountuserName);
+				 if (success)
+				 {
+					 System.out.println("Account Unlocked");
+				 }
+				 else
+				 {
+					 System.out.println("You don't have the authority to unlock accounts.");
+				 }
+				break;
+
+			case 22:
 				try
 				{
 					dbConnection.backUpDatabase();
@@ -299,7 +337,7 @@ public class DBConnectionTester
 				}
 				break;
 
-			case 21:
+			case 23:
 				System.out.print("Enter the name of the backup directory: ");
 				String backupDirectory = scan.next();
 				success = dbConnection.restoreDatase(backupDirectory);
@@ -314,7 +352,7 @@ public class DBConnectionTester
 				}
 				break;
 
-			case 22:
+			case 24:
 				exit = true;
 				break;
 			default:

@@ -36,8 +36,10 @@ CREATE TABLE LINK (
 
 CREATE TABLE FA_USER (
     usID INT CONSTRAINT FA_USER_PK PRIMARY KEY,
-    usName CHAR(25) NOT NULL,
-    usFirstLogin SMALLINT NOT NULL DEFAULT 0,
+    usName VARCHAR(25) NOT NULL,
+    usPassword VARCHAR(16) NOT NULL,
+    usFirstLogin SMALLINT NOT NULL DEFAULT 1,
+    usConsecFailedLogins SMALLINT NOT NULL DEFAULT 0,
     usLockOut TIMESTAMP
 );
 
@@ -101,6 +103,6 @@ CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY(
     'derby.user.guest',
     'Gu123');
 
-INSERT INTO FA_USER(usID, usName) values(1, 'Admin');
-INSERT INTO FA_USER(usID, usName) values(2, 'User');	
-INSERT INTO FA_USER(usID, usName) values(3, 'Guest')
+INSERT INTO FA_USER (usID, usName, usPassword) VALUES (1, 'admin', 'Ad123');
+INSERT INTO FA_USER (usID, usName, usPassword) VALUES (2, 'user', 'Us123');	
+INSERT INTO FA_USER (usID, usName, usPassword) VALUES (3, 'guest', 'Gu123')

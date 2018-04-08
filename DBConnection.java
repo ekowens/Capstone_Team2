@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.Scanner;
+import java.util.concurrent.TimeUnit;
 
 ////////////////////////////////////////////////////////////////////////////////
 //  Course:   CSC 289 Spring 2018
@@ -42,6 +43,8 @@ public class DBConnection
 	private String password;
 	private String userNamePasswordURL;
 	private Connection conn = null;
+	public final static long LOCKOUT_PERIOD = 60;
+	public final static int MAX_FAILED_LOGINS = 3;
 	
 	public DBConnection()
 	{}
@@ -155,7 +158,7 @@ public class DBConnection
 	// connection
 	public String createConnection()
 	{
-		String status = "";
+		// Check for existence of database
 		File directory = new File("c:/FileAid/" + dbName);
 		if (!directory.exists())
 		{
@@ -163,27 +166,31 @@ public class DBConnection
 			System.out.println("...Creating Database");
 			createDB();
 		}
-		try
+
+		// Determine the status of the user
+		String status = getUserStatus();
+		System.out.println(status);
+
+		if (status.equals("LOGGED_IN_FIRST_LOGIN") | status.equals("LOGGED_IN"))
 		{
-			Class.forName(driver).newInstance();
-		}
-		catch (java.lang.ClassNotFoundException | InstantiationException | IllegalAccessException e)
-		{
-			e.printStackTrace();
-		}
-		boolean success = true;
-		try
-		{
-			conn = DriverManager
-					.getConnection(connectionURL + userNamePasswordURL);
-		}
-		catch (Exception except)
-		{
-			//except.printStackTrace();
-			success = false;
-		}
-		if (success)
-		{
+			try
+			{
+				Class.forName(driver).newInstance();
+			}
+			catch (java.lang.ClassNotFoundException | InstantiationException
+					| IllegalAccessException e)
+			{
+				e.printStackTrace();
+			}
+			try
+			{
+				conn = DriverManager
+						.getConnection(connectionURL + userNamePasswordURL);
+			}
+			catch (Exception except)
+			{
+				// except.printStackTrace();
+			}
 			try
 			{
 				Statement statement = conn.createStatement();
@@ -197,20 +204,11 @@ public class DBConnection
 			catch (Exception except)
 			{
 				except.printStackTrace();
-				success = false;
 			}
 		} // end if
-		if(success == true)
-		{
-			status = "LOGGED_IN";
-		}
-		else
-		{
-			status = "INCORRECT_PASSWORD";
-		}
 		return status;
 	}// end createConnection
-
+	
 		// Shutdown the database
 	   public void shutdown()
 		{
@@ -1056,15 +1054,20 @@ public class DBConnection
 		return ++nextID;
 	}// end getPassword
 	
+	// Update password (also updates FIRSTLOGIN to 0 aka false)
 	public boolean updatePassword(String user, String newPassword)
 	{
 		if (userName.equals("admin") | userName.equals(user))
 		{
+			String update = "update FA_USER set usPASSWORD ='" + newPassword + 
+					"', usFIRSTLOGIN= 0 where usNAME='" + user + "'";
 		try
 		{
-			Statement s = conn.createStatement();
-			s.executeUpdate("CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY("
+			Statement statement = conn.createStatement();
+			statement.executeUpdate("CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY("
 					+ "    'derby.user." + user + "', '" + newPassword + "')");
+			statement.executeUpdate(update);
+			statement.close();
 		}
 		catch (SQLException e)
 		{
@@ -1078,6 +1081,66 @@ public class DBConnection
 			return false;
 		}
 	}
+	
+	public ArrayList<Login> getAllLogins()
+	{
+		ArrayList<Login> allLogins = new ArrayList<Login>();
+		String query = "select * from LOGIN";
+		try
+		{
+			Statement statement = conn.createStatement();
+			ResultSet results = statement.executeQuery(query);
+			int numRows = DBConnection.getNumTableRows(conn, "LOGIN");
+
+			if (numRows == 0)
+			{
+				return null;
+			}
+			else
+			{
+				while (results.next())
+				{
+					Login login = new Login(results.getInt(2), results.getTimestamp(3),
+							convertBooleanDB(results.getInt(4)));
+					allLogins.add(login);
+				} // end while
+				results.close();
+				statement.close();
+			}
+		}
+		catch (SQLException sqlExcept)
+		{
+			sqlExcept.printStackTrace();
+		}			
+		return allLogins;
+	}
+	
+	
+	public boolean unlockAccount(String lockedAccountUserName)
+	{
+		if(!userName.equals("admin"))
+				{
+			return false;
+				}
+		else
+		{
+			String update = "update FA_USER set usLOCKOUT = null, usCONSECFAILEDLOGINS = 0 "
+				+ "where usName='" + lockedAccountUserName + "'";
+		try
+		{
+			Statement statement = conn.createStatement();
+			statement.executeUpdate(update);
+			statement.close();
+		}
+		catch (SQLException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return true;
+		} //end else		
+	} //end unLockAccount
+
 
 //////////////////DBConnection Internal Helper Methods//////////////////////////////////////////
 
@@ -1181,6 +1244,192 @@ public class DBConnection
 			}
 		}//end convertBooleanDB
 
+		// Returns the user's status (LOGGED_IN, LOGGED_IN_FIRST_LOGIN, INCORRECT_PASSWORD, LOCKED_OUT)
+		private String getUserStatus()
+		{
+			String status = "";
+			String correctPassword = "";
+			int firstLogin = 0;
+			int consecFailedLogins = 0;
+			Timestamp lockout = null;
+			int userID = 0;
+			
+			try
+			{
+				Class.forName(driver).newInstance();
+			}
+			catch (java.lang.ClassNotFoundException | InstantiationException | IllegalAccessException e)
+			{
+				e.printStackTrace();
+			}
+			try
+			{
+				conn = DriverManager
+						.getConnection(connectionURL + ";user=superadmin;password=Sa123");
+			}
+			catch (Exception except)
+			{
+				except.printStackTrace();
+			}
+			try
+			{
+				Statement statement = conn.createStatement();
+				// Set the SCHEMA to the default "APP" for everyone
+				statement.execute("SET SCHEMA APP");
+			}
+			catch (Exception except)
+			{
+				except.printStackTrace();
+			}
+			
+			String query = "select * from FA_USER where usName = '" + userName + "'";
+			try
+			{
+				Statement statement = conn.createStatement();
+				ResultSet results = statement.executeQuery(query);
+					while (results.next())
+					{
+					    userID = results.getInt(1);
+					    correctPassword = results.getString(3);
+					    firstLogin = results.getInt(4);
+					    consecFailedLogins = results.getInt(5);
+					    lockout = results.getTimestamp(6);
+					} // end while
+					results.close();
+					statement.close();
+			}
+			catch (SQLException sqlExcept)
+			{
+				sqlExcept.printStackTrace();
+			}
+			
+			// Evaluate lockout to determine current status
+			if (lockout != null)
+			{
+				GregorianCalendar gcLockout = new GregorianCalendar();
+				gcLockout.setTimeInMillis(lockout.getTime());
+				GregorianCalendar now = new GregorianCalendar();
+				long minutesDifference = minutesBetween(now, gcLockout);
+				if (minutesDifference > LOCKOUT_PERIOD)
+				{
+					unlockAccount(userName);
+					lockout = null;
+				}
+			}
+			
+			if (lockout != null)
+			{
+				status = "LOCKED_OUT";
+				insertLogin(userID, 0);
+			}
+			else
+			{
+				if (!password.equals(correctPassword))
+				{
+					status = "INCORRECT_PASSWORD";
+					insertLogin(userID, 0);
+					consecFailedLogins = consecFailedLogins + 1;
+					System.out.println("Failed Logins: " + consecFailedLogins);
+					if(consecFailedLogins >= MAX_FAILED_LOGINS)
+					{
+						lockAccount(userName);
+					}
+					else
+					{
+						incrementFailedLogins(userName, consecFailedLogins);
+					}
+					//incrementLockOutCounter(userID);
+					//increment consecFailedLogins, lockout if necessary 
+				}
+				else if (firstLogin == 1)
+				{
+					status = "LOGGED_IN_FIRST_LOGIN";
+					insertLogin(userID, 1);
+				}
+				else
+				{
+					status = "LOGGED_IN";
+					insertLogin(userID, 1);
+					
+				}
+			}
+			shutdown();
+			return status;
+		}// end getUserStatus
+
+
+	private boolean insertLogin(int userID, int success)
+	{
+		GregorianCalendar date = new GregorianCalendar();
+		Timestamp sqlDate = new Timestamp(date.getTimeInMillis());
+		String update = String
+				.format("INSERT INTO LOGIN (lousID, loDATE, loSUCCESS) "
+						+ "VALUES(%d, '%s', %d)", userID, sqlDate, success);
+		Statement statement = null;
+		try
+		{
+			statement = conn.createStatement();
+			statement.execute(update);
+			statement.close();
+		}
+		catch (SQLException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return true;
+	}
+	
+	
+	public void lockAccount(String userName)
+	{
+		GregorianCalendar date = new GregorianCalendar();
+		Timestamp sqlDate = new Timestamp(date.getTimeInMillis());
+		String update = "update FA_USER set usLOCKOUT = '" + sqlDate
+				+ "' where usName='" + userName + "'";
+		try
+		{
+			Statement statement = conn.createStatement();
+			statement.executeUpdate(update);
+			statement.close();
+		}
+		catch (SQLException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	} //end lockAccount
+
+	
+	public void incrementFailedLogins(String userName, int consecFailedLogins)
+	{
+		System.out.println("incrementFailedLogins started.");
+		String update = "update FA_USER set usCONSECFAILEDLOGINS = " + consecFailedLogins
+				+ " where usName='" + userName + "'";
+		System.out.println(update);
+		try
+		{
+			Statement statement = conn.createStatement();
+			statement.executeUpdate(update);
+			statement.close();
+		}
+		catch (SQLException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	} //end incrementFailedLogins
+
+	
+	private static long minutesBetween(GregorianCalendar startDate, GregorianCalendar endDate) {
+	    long end = endDate.getTimeInMillis();
+	    long start = startDate.getTimeInMillis();
+	    return TimeUnit.MILLISECONDS.toMinutes(Math.abs(end - start));
+	}
+
+		
 		// Inserts data for testing purposes
 		public void insertTestData()
 		{
