@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.text.Text?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" style="-fx-background-color: #2d3e50;" xmlns="http://javafx.com/javafx/9.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="LoginAdminController">
+   <children>
+      <Text fill="#262626" layoutX="232.0" layoutY="64.0" strokeType="OUTSIDE" strokeWidth="0.0" text="File">
+         <font>
+            <Font name="Cambria" size="43.0" />
+         </font>
+      </Text>
+      <Text fill="#5c5b59" layoutX="300.0" layoutY="64.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Aid">
+         <font>
+            <Font name="Cambria" size="43.0" />
+         </font>
+      </Text>
+      <ImageView fitHeight="50.0" fitWidth="84.0" layoutX="194.0" layoutY="74.0" pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@../image/Microsoft%20Word_48px_5.png" />
+         </image>
+      </ImageView>
+      <ImageView fitHeight="50.0" fitWidth="84.0" layoutX="241.0" layoutY="74.0" pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@../image/Microsoft%20Excel_48px_7.png" />
+         </image>
+      </ImageView>
+      <ImageView fitHeight="50.0" fitWidth="84.0" layoutX="288.0" layoutY="74.0" pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@../image/Microsoft%20PowerPoint_48px_4.png" />
+         </image>
+      </ImageView>
+      <ImageView fitHeight="50.0" fitWidth="84.0" layoutX="338.0" layoutY="74.0" pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@../image/Microsoft%20Outlook_48px_2.png" />
+         </image>
+      </ImageView>
+      <ImageView fitHeight="26.0" fitWidth="26.0" layoutX="174.0" layoutY="210.0" pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@../image/Admin%20Settings%20Male_50px_2.png" />
+         </image>
+      </ImageView>
+      <Text fill="#9a5201" layoutX="246.0" layoutY="183.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Welcome">
+         <font>
+            <Font name="Cambria" size="21.0" />
+         </font>
+      </Text>
+      <Button fx:id="backButton" blendMode="EXCLUSION" layoutX="29.0" layoutY="16.0" mnemonicParsing="false" onAction="#backButtonClicked" style="-fx-background-color: transparent;" text="Back to menu" textFill="#41413f" />
+      <ImageView fitHeight="36.0" fitWidth="38.0" layoutY="14.0">
+         <image>
+            <Image url="@../../../../../../AppData/Local/Temp/Back_50px.png" />
+         </image>
+      </ImageView>
+      <ImageView fitHeight="36.0" fitWidth="26.0" layoutX="174.0" layoutY="250.0" pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@../image/Lock_50px.png" />
+         </image>
+      </ImageView>
+      <TextField fx:id="username" layoutX="212.0" layoutY="210.0" onAction="#usernameEntered" promptText="Username" />
+      <TextField fx:id="password" layoutX="212.0" layoutY="250.0" onAction="#passwordEnter" promptText="Password" />
+      <Button fx:id="enterbutton" layoutX="310.0" layoutY="299.0" mnemonicParsing="false" onAction="#enterButtonClicked" text="enter" />
+   </children>
+</AnchorPane>
