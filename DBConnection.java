@@ -801,7 +801,7 @@ public class DBConnection
 		else
 		{
 			String update = "DELETE FROM MEMO WHERE mefiID=" + faFileID +
-					" AND meDATE=" + date;
+					" AND meDATE= '" + date + "'";
 			try
 			{
 				Statement statement = conn.createStatement();
@@ -818,7 +818,7 @@ public class DBConnection
 			return true;
 		} // end else
 
-	}
+	}//end deleteMemo
 	
 	// Inserts a Link, returns true if successful, false if FAFile not
 	// found
@@ -987,7 +987,7 @@ public class DBConnection
 	public void deleteTickler(int faFileID, Timestamp date)
 	{
 			String update = "DELETE FROM TICKLER WHERE tifiID=" + faFileID +
-					" AND tiDATE=" + date;
+					" AND tiDATE='" + date + "'";
 			try
 			{
 				Statement statement = conn.createStatement();
@@ -1003,7 +1003,7 @@ public class DBConnection
 			}
 			ActionLog alItem = new ActionLog(getDateTimeNow(), ActionLogType.DELETE_TICKLER, userID);
 			insertActionLogItem(alItem);
-	}
+	}//end deleteTickler
 	
 	// Back up FileAid to a directory named today's date in format yyyy-MM-dd
 	// Method directly from Derby Documentation

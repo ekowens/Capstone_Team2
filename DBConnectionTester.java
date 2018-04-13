@@ -37,6 +37,7 @@ public class DBConnectionTester
 	{
 		DBConnection dbConnection = null;
 		Scanner scan = new Scanner(System.in);
+		Scanner scanLine = new Scanner(System.in);
 		boolean success = false;
 		System.out.println("\nWelcome to FileAid");
 		while (!success)
@@ -330,7 +331,7 @@ public class DBConnectionTester
 				System.out.print("\nPlease enter the ID of the FAFile of the memo: ");
 				faFileID = scan.nextInt();
 				System.out.print("\nPlease enter the Timestamp of the memo: ");
-				String timeString = scan.nextLine();
+				String timeString = scanLine.nextLine();
 				Timestamp dateTime = Timestamp.valueOf(timeString);
 				
 				success = dbConnection.deleteMemo(faFileID, dateTime);
@@ -379,6 +380,7 @@ public class DBConnectionTester
 			}
 		}
 		scan.close();
+		scanLine.close();
 		dbConnection.shutdown();
 
 	}// end Main
